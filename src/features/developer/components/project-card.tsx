@@ -26,7 +26,7 @@ export function ProjectCard({ project, href, onEdit, onToggleArchived, onDelete 
   return (
     <div
       className={cn(
-        "group relative flex flex-col gap-2 rounded-[var(--radius)] border bg-card p-4 transition-colors hover:border-foreground/20",
+        "group relative flex flex-col gap-2 rounded-[var(--radius)] border bg-card p-4 transition-[border-color,box-shadow,translate] duration-200 hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-md",
         project.archived && "opacity-70",
       )}
     >

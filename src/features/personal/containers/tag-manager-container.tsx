@@ -1,6 +1,7 @@
 "use client";
 
 import { PlusIcon, TagIcon, Trash2Icon } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
@@ -11,6 +12,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { ResponsiveDialog } from "@/components/common/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { listItemVariants } from "@/lib/motion";
 
 import { TagForm } from "../components/tag-form";
 import { useTagActions, useTags, useTasks } from "../hooks";
@@ -68,23 +70,33 @@ export function TagManagerContainer() {
         />
       ) : (
         <ul className="divide-y overflow-hidden rounded-[var(--radius)] border bg-card">
-          {tags.map((tag) => {
-            const count = openCounts.get(tag.id) ?? 0;
-            return (
-              <li key={tag.id} className="flex items-center gap-3 px-4 py-3">
-                <ColorDot color={tag.color} className="size-3" />
-                <Link href={`/p?tag=${tag.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline">
-                  {tag.name}
-                </Link>
-                <span className="text-xs text-muted-foreground">
-                  {count} open
-                </span>
-                <Button variant="ghost" size="sm" onClick={() => setEditing({ mode: "edit", tag })}>
-                  Edit
-                </Button>
-              </li>
-            );
-          })}
+          <AnimatePresence initial={false}>
+            {tags.map((tag) => {
+              const count = openCounts.get(tag.id) ?? 0;
+              return (
+                <motion.li
+                  key={tag.id}
+                  layout="position"
+                  variants={listItemVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="overflow-hidden"
+                >
+                  <div className="flex items-center gap-3 px-4 py-3">
+                    <ColorDot color={tag.color} className="size-3 transition-colors" />
+                    <Link href={`/p?tag=${tag.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline">
+                      {tag.name}
+                    </Link>
+                    <span className="text-xs text-muted-foreground tabular-nums">{count} open</span>
+                    <Button variant="ghost" size="sm" onClick={() => setEditing({ mode: "edit", tag })}>
+                      Edit
+                    </Button>
+                  </div>
+                </motion.li>
+              );
+            })}
+          </AnimatePresence>
         </ul>
       )}
 

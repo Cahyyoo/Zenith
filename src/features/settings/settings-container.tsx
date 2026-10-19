@@ -13,6 +13,7 @@ import { WorkspaceSwitcher } from "@/components/layout/workspace-switcher";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useSession } from "@/features/auth/session-provider";
+import { InstallCard } from "@/features/pwa/install-card";
 import { useSyncStatus } from "@/lib/query/use-sync-status";
 import { routes } from "@/lib/routes";
 import { useWorkspaceStore } from "@/stores/workspace";
@@ -60,6 +61,13 @@ export function SettingsContainer() {
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
+        </Section>
+
+        <Section
+          title="Install app"
+          description="Add Zenith to your home screen or desktop. It opens in its own window and works offline."
+        >
+          <InstallCard />
         </Section>
 
         <Section title="Workspace" description="Where Zenith opens, and which accent it uses.">

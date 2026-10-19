@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatDueDate } from "@/lib/dates";
+import { listItemVariants } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 import { dueState } from "../lib/sort";
@@ -60,7 +61,16 @@ export function TaskItem({ task, tags, today, onToggle, onOpen, onDelete }: Task
   const due = task.due_date && !task.completed ? dueState(task.due_date, today) : null;
 
   return (
-    <li className="relative overflow-hidden rounded-[var(--radius)]">
+    <motion.li
+      // `position` animates re-sorting (e.g. a changed due date) without
+      // stretching the row; enter/exit come from the shared list variants.
+      layout="position"
+      variants={listItemVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="relative overflow-hidden rounded-[var(--radius)]"
+    >
       <motion.div
         aria-hidden
         style={{ opacity: revealOpacity }}
@@ -83,12 +93,20 @@ export function TaskItem({ task, tags, today, onToggle, onOpen, onDelete }: Task
         className="relative flex items-start gap-3 border bg-card px-3 py-3 select-none"
         style={{ x, borderRadius: "inherit" }}
       >
-        <Checkbox
-          checked={task.completed}
-          onCheckedChange={(checked) => onToggle(checked === true)}
-          aria-label={task.completed ? `Mark "${task.title}" as not done` : `Mark "${task.title}" as done`}
-          className="mt-0.5 size-5 rounded-full"
-        />
+        <motion.span
+          className="mt-0.5 flex"
+          whileTap={{ scale: 0.82 }}
+          initial={false}
+          animate={task.completed ? { scale: [1, 1.25, 1] } : { scale: 1 }}
+          transition={{ duration: 0.28 }}
+        >
+          <Checkbox
+            checked={task.completed}
+            onCheckedChange={(checked) => onToggle(checked === true)}
+            aria-label={task.completed ? `Mark "${task.title}" as not done` : `Mark "${task.title}" as done`}
+            className="size-5 rounded-full transition-colors"
+          />
+        </motion.span>
 
         <button
           type="button"
@@ -99,7 +117,7 @@ export function TaskItem({ task, tags, today, onToggle, onOpen, onDelete }: Task
         >
           <span
             className={cn(
-              "w-full truncate text-[15px] leading-snug",
+              "w-full truncate text-[15px] leading-snug decoration-muted-foreground/60 transition-colors duration-200",
               task.completed && "text-muted-foreground line-through",
             )}
           >
@@ -138,6 +156,6 @@ export function TaskItem({ task, tags, today, onToggle, onOpen, onDelete }: Task
           </DropdownMenuContent>
         </DropdownMenu>
       </motion.div>
-    </li>
+    </motion.li>
   );
 }

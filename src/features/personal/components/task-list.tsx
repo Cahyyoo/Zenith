@@ -1,8 +1,10 @@
 "use client";
 
 import { ChevronDownIcon } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
+import { collapseVariants } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 import type { Tag, Task } from "../types";
@@ -36,7 +38,11 @@ export function TaskList({ open, completed, today, onToggle, onOpen, onDelete }:
 
   return (
     <div className="flex flex-col gap-6">
-      {open.length > 0 ? <ul className="flex flex-col gap-2">{open.map(renderRow)}</ul> : null}
+      <ul className="flex flex-col gap-2">
+        {/* The page itself fades in on navigation, so rows only animate when
+            they are added, completed (moved out) or deleted afterwards. */}
+        <AnimatePresence initial={false}>{open.map(renderRow)}</AnimatePresence>
+      </ul>
 
       {completed.length > 0 ? (
         <section>
@@ -44,12 +50,29 @@ export function TaskList({ open, completed, today, onToggle, onOpen, onDelete }:
             type="button"
             onClick={() => setShowCompleted((value) => !value)}
             aria-expanded={showCompleted}
-            className="mb-2 flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+            className="mb-2 flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            <ChevronDownIcon className={cn("size-4 transition-transform", !showCompleted && "-rotate-90")} />
+            <ChevronDownIcon
+              className={cn("size-4 transition-transform duration-200", !showCompleted && "-rotate-90")}
+            />
             Completed ({completed.length})
           </button>
-          {showCompleted ? <ul className="flex flex-col gap-2">{completed.map(renderRow)}</ul> : null}
+          <AnimatePresence initial={false}>
+            {showCompleted ? (
+              <motion.div
+                key="completed"
+                variants={collapseVariants}
+                initial="collapsed"
+                animate="expanded"
+                exit="collapsed"
+                className="overflow-hidden"
+              >
+                <ul className="flex flex-col gap-2">
+                  <AnimatePresence initial={false}>{completed.map(renderRow)}</AnimatePresence>
+                </ul>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
         </section>
       ) : null}
     </div>

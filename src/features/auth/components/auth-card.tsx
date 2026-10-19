@@ -12,7 +12,7 @@ type AuthCardProps = {
 export function AuthCard({ title, description, children }: AuthCardProps) {
   return (
     <main className="flex min-h-dvh items-center justify-center bg-muted/40 px-4 py-10">
-      <Card className="w-full max-w-sm">
+      <Card className="w-full max-w-sm animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-300">
         <CardHeader className="items-center text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icon.svg" alt="" className="mx-auto mb-2 size-12 rounded-xl" />

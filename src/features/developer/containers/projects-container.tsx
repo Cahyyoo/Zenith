@@ -1,6 +1,7 @@
 "use client";
 
 import { FolderKanbanIcon, PlusIcon } from "lucide-react";
+import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -10,6 +11,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { ResponsiveDialog } from "@/components/common/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { listItemVariants, staggerContainer } from "@/lib/motion";
 import { routes } from "@/lib/routes";
 
 import { ProjectCard } from "../components/project-card";
@@ -32,18 +34,25 @@ export function ProjectsContainer() {
   const takenKeys = new Set(projects.map((project) => project.key));
 
   const renderGrid = (list: Project[]) => (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    // Cards cascade in on first render; children inherit the parent's variants.
+    <motion.div
+      variants={staggerContainer}
+      initial="initial"
+      animate="animate"
+      className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+    >
       {list.map((project) => (
-        <ProjectCard
-          key={project.id}
-          project={project}
-          href={routes.board(project.id)}
-          onEdit={() => setEditing({ mode: "edit", project })}
-          onToggleArchived={() => actions.updateProject(project.id, { archived: !project.archived })}
-          onDelete={() => setDeleting(project)}
-        />
+        <motion.div key={project.id} variants={listItemVariants}>
+          <ProjectCard
+            project={project}
+            href={routes.board(project.id)}
+            onEdit={() => setEditing({ mode: "edit", project })}
+            onToggleArchived={() => actions.updateProject(project.id, { archived: !project.archived })}
+            onDelete={() => setDeleting(project)}
+          />
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 
   return (

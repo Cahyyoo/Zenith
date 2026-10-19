@@ -2,6 +2,7 @@
 
 import {
   CircleUserIcon,
+  DownloadIcon,
   FolderKanbanIcon,
   ListTodoIcon,
   PlusIcon,
@@ -9,6 +10,7 @@ import {
   SquareKanbanIcon,
   TagsIcon,
 } from "lucide-react";
+import { motion } from "motion/react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, type ReactNode } from "react";
@@ -18,8 +20,10 @@ import { SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarP
 import { useSession } from "@/features/auth/session-provider";
 import { useProjects } from "@/features/developer/hooks";
 import { useTags } from "@/features/personal/hooks";
+import { useInstallState } from "@/features/pwa/install";
 import { QuickAddContainer } from "@/features/quick-add/quick-add-container";
 import type { Workspace } from "@/lib/domain";
+import { pageVariants } from "@/lib/motion";
 import { useSyncStatus } from "@/lib/query/use-sync-status";
 import { routes } from "@/lib/routes";
 import { useWorkspace, workspaceFromPath } from "@/lib/use-workspace";
@@ -100,6 +104,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const setSidebarOpen = useWorkspaceStore((state) => state.setSidebarOpen);
   const setLastWorkspace = useWorkspaceStore((state) => state.setLastWorkspace);
   const openQuickAdd = useUiStore((state) => state.setQuickAddOpen);
+  const installState = useInstallState();
 
   const navItems = useNavItems(workspace, pathname);
   const listItems = useListItems(workspace, pathname);
@@ -158,6 +163,18 @@ export function AppShell({ children }: { children: ReactNode }) {
           <WorkspaceSwitcher value={workspace} onChange={switchWorkspace} className="md:hidden" />
           <div className="ml-auto flex items-center gap-2">
             <SyncIndicator online={sync.online} pending={sync.pending} />
+            {installState.kind === "available" ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void installState.install()}
+                aria-label="Install Zenith"
+                className="animate-in fade-in-0 zoom-in-95"
+              >
+                <DownloadIcon />
+                <span className="hidden sm:inline">Install</span>
+              </Button>
+            ) : null}
             <Button size="sm" className="hidden md:inline-flex" onClick={() => openQuickAdd(true)}>
               <PlusIcon />
               {addLabel}
@@ -166,7 +183,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
 
         <main className="flex-1 px-4 pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))] md:px-6 md:pt-6 md:pb-10">
-          {children}
+          {/* Re-keyed per route so each page eases in after navigation. */}
+          <motion.div key={pathname} variants={pageVariants} initial="initial" animate="animate">
+            {children}
+          </motion.div>
         </main>
       </SidebarInset>
 

@@ -20,8 +20,8 @@ export function IssueCard({ issue, projectKey, dragging, overlay, className, ...
   return (
     <div
       className={cn(
-        "group flex flex-col gap-1.5 rounded-[var(--radius)] border bg-card p-2.5 text-left text-card-foreground shadow-xs transition-colors outline-none hover:border-foreground/20 focus-visible:ring-2 focus-visible:ring-ring",
-        dragging && "opacity-40",
+        "group flex flex-col gap-1.5 rounded-[var(--radius)] border bg-card p-2.5 text-left text-card-foreground shadow-xs transition-[border-color,box-shadow,opacity] duration-150 outline-none animate-in fade-in-0 zoom-in-95 hover:border-foreground/20 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-ring",
+        dragging && "opacity-40 shadow-none",
         overlay && "rotate-1 cursor-grabbing shadow-lg ring-1 ring-primary/40",
         className,
       )}

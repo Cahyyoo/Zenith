@@ -47,8 +47,8 @@ export function KanbanColumn({ status, issues }: KanbanColumnProps) {
         <div
           ref={setNodeRef}
           className={cn(
-            "flex min-h-24 flex-1 flex-col gap-2 rounded-b-[inherit] px-2 pb-2 transition-colors",
-            isOver && "bg-primary/5",
+            "flex min-h-24 flex-1 flex-col gap-2 rounded-b-[inherit] px-2 pb-2 transition-[background-color,box-shadow] duration-200",
+            isOver && "bg-primary/8 shadow-[inset_0_0_0_2px] shadow-primary/25",
           )}
         >
           {issues.map((issue) => (

@@ -2,12 +2,15 @@
 
 import { SerwistProvider } from "@serwist/turbopack/react";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { MotionConfig } from "motion/react";
 import { ThemeProvider } from "next-themes";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SessionProvider } from "@/features/auth/session-provider";
+import "@/features/pwa/install";
+import { UpdateNotifier } from "@/features/pwa/update-notifier";
 import { CACHE_BUSTER, queryPersister } from "@/lib/query/persister";
 import {
   CACHE_MAX_AGE,
@@ -47,10 +50,14 @@ export function Providers({ children }: { children: ReactNode }) {
             void resumeRestoredMutations(queryClient).then(() => queryClient.invalidateQueries());
           }}
         >
-          <SessionProvider>
-            <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
-          </SessionProvider>
+          {/* "user" honours the OS reduce-motion setting for every animation. */}
+          <MotionConfig reducedMotion="user">
+            <SessionProvider>
+              <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
+            </SessionProvider>
+          </MotionConfig>
           <Toaster position="top-center" richColors closeButton />
+          <UpdateNotifier />
         </PersistQueryClientProvider>
       </ThemeProvider>
     </SerwistProvider>

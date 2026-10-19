@@ -53,7 +53,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: workspaceScript }} />
       </head>
-      <body className="min-h-full">
+      <body className="min-h-full transition-colors duration-300">
         <Providers>{children}</Providers>
       </body>
     </html>
