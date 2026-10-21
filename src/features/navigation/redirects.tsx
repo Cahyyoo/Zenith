@@ -20,15 +20,13 @@ export function HomeRedirect() {
   return <Splash />;
 }
 
-/** `/d` → the board opened last, or the project list. */
+/** `/d` → Focus, the cross-project "what's next" list. */
 export function DeveloperHomeRedirect() {
   const router = useRouter();
-  const hydrated = useWorkspaceHydrated();
-  const lastProjectId = useWorkspaceStore((state) => state.lastProjectId);
 
   useEffect(() => {
-    if (hydrated) router.replace(lastProjectId ? routes.board(lastProjectId) : routes.projects);
-  }, [hydrated, lastProjectId, router]);
+    router.replace(routes.focus);
+  }, [router]);
 
   return <Splash />;
 }

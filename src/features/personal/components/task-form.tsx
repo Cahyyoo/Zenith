@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { ReactNode } from "react";
 import { Controller, useForm } from "react-hook-form";
 
+import { DatePicker } from "@/components/common/date-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +12,6 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { taskFormSchema, type TaskFormValues } from "../schemas";
 import type { Tag } from "../types";
-import { DueDatePicker } from "./due-date-picker";
 import { TagPicker } from "./tag-picker";
 
 const EMPTY_TASK: TaskFormValues = { title: "", notes: "", due_date: null, tag_ids: [] };
@@ -57,7 +57,7 @@ export function TaskForm({ tags, defaultValues = EMPTY_TASK, submitLabel, onSubm
         <Controller
           control={form.control}
           name="due_date"
-          render={({ field }) => <DueDatePicker id="task-due" value={field.value} onChange={field.onChange} />}
+          render={({ field }) => <DatePicker id="task-due" value={field.value} onChange={field.onChange} emptyLabel="No due date" />}
         />
       </div>
 

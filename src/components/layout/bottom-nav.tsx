@@ -14,9 +14,9 @@ export function BottomNav({ items }: { items: NavItem[] }) {
       aria-label="Primary"
       className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur transition-colors md:hidden"
     >
-      <ul className="mx-auto grid max-w-md grid-cols-3">
+      <ul className={cn("mx-auto grid max-w-md", items.length === 4 ? "grid-cols-4" : "grid-cols-3")}>
         {items.map(({ href, label, icon: Icon, active }) => (
-          <li key={href}>
+          <li key={label}>
             <Link
               href={href}
               aria-current={active ? "page" : undefined}

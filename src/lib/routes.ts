@@ -3,6 +3,7 @@ export const routes = {
   tags: "/p/tags",
   tasksWithTag: (tagId: string) => `/p?tag=${encodeURIComponent(tagId)}`,
   developer: "/d",
+  focus: "/d/focus",
   projects: "/d/projects",
   board: (projectId: string, issueId?: string) => {
     const params = new URLSearchParams({ project: projectId });

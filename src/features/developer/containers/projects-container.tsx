@@ -3,7 +3,7 @@
 import { FolderKanbanIcon, PlusIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { EmptyState } from "@/components/common/empty-state";
@@ -11,13 +11,17 @@ import { PageHeader } from "@/components/common/page-header";
 import { ResponsiveDialog } from "@/components/common/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { todayIso } from "@/lib/dates";
 import { listItemVariants, staggerContainer } from "@/lib/motion";
 import { routes } from "@/lib/routes";
 
-import { ProjectCard } from "../components/project-card";
+import { ProjectCard, type ProjectStats } from "../components/project-card";
 import { ProjectForm } from "../components/project-form";
-import { useProjectActions, useProjects } from "../hooks";
+import { useAllIssues, useProjectActions, useProjects } from "../hooks";
+import { nextUp, projectDeadline, projectUrgency, rankFocus } from "../lib/focus";
 import type { Project } from "../types";
+
+const EMPTY_STATS: ProjectStats = { total: 0, done: 0, open: 0, inProgress: 0, critical: 0 };
 
 type Editing = { mode: "create" } | { mode: "edit"; project: Project } | null;
 
@@ -27,9 +31,44 @@ export function ProjectsContainer() {
   const actions = useProjectActions();
   const [editing, setEditing] = useState<Editing>(null);
   const [deleting, setDeleting] = useState<Project | null>(null);
+  const [today] = useState(todayIso);
+  const { issues } = useAllIssues(projectsQuery.data);
 
-  const projects = projectsQuery.data ?? [];
-  const active = projects.filter((project) => !project.archived);
+  const projects = useMemo(() => projectsQuery.data ?? [], [projectsQuery.data]);
+  // Most pressing first: project priority + deadline, then nearest deadline, then name.
+  const active = useMemo(
+    () =>
+      projects
+        .filter((project) => !project.archived)
+        .sort(
+          (a, b) =>
+            projectUrgency(b, today) - projectUrgency(a, today) ||
+            (a.target_date ?? "9999-12-31").localeCompare(b.target_date ?? "9999-12-31") ||
+            a.name.localeCompare(b.name),
+        ),
+    [projects, today],
+  );
+
+  const statsByProject = useMemo(() => {
+    const stats = new Map<string, ProjectStats>();
+    for (const issue of issues) {
+      const entry = stats.get(issue.project_id) ?? { total: 0, done: 0, open: 0, inProgress: 0, critical: 0 };
+      entry.total += 1;
+      if (issue.status === "done") entry.done += 1;
+      else {
+        entry.open += 1;
+        if (issue.status === "in_progress") entry.inProgress += 1;
+        if (issue.priority === "critical") entry.critical += 1;
+      }
+      stats.set(issue.project_id, entry);
+    }
+    for (const project of projects) {
+      const top = nextUp(rankFocus(issues.filter((issue) => issue.project_id === project.id), projects, today));
+      const entry = stats.get(project.id);
+      if (entry && top) entry.next = { number: top.issue.number, title: top.issue.title };
+    }
+    return stats;
+  }, [issues, projects, today]);
   const archived = projects.filter((project) => project.archived);
   const takenKeys = new Set(projects.map((project) => project.key));
 
@@ -49,6 +88,8 @@ export function ProjectsContainer() {
             onEdit={() => setEditing({ mode: "edit", project })}
             onToggleArchived={() => actions.updateProject(project.id, { archived: !project.archived })}
             onDelete={() => setDeleting(project)}
+            stats={project.archived ? undefined : (statsByProject.get(project.id) ?? EMPTY_STATS)}
+            deadline={project.archived ? null : projectDeadline(project, today)}
           />
         </motion.div>
       ))}
@@ -113,6 +154,8 @@ export function ProjectsContainer() {
               key: editing.project.key,
               description: editing.project.description,
               color: editing.project.color,
+              priority: editing.project.priority,
+              target_date: editing.project.target_date,
             }}
             onSubmit={(values) => {
               actions.updateProject(editing.project.id, values);

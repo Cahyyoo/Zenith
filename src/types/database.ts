@@ -146,6 +146,8 @@ export type Database = {
           id: string;
           key: string;
           name: string;
+          priority: Database["public"]["Enums"]["issue_priority"];
+          target_date: string | null;
           updated_at: string;
           user_id: string;
         };
@@ -157,6 +159,8 @@ export type Database = {
           id?: string;
           key: string;
           name: string;
+          priority?: Database["public"]["Enums"]["issue_priority"];
+          target_date?: string | null;
           updated_at?: string;
           user_id?: string;
         };
@@ -168,6 +172,8 @@ export type Database = {
           id?: string;
           key?: string;
           name?: string;
+          priority?: Database["public"]["Enums"]["issue_priority"];
+          target_date?: string | null;
           updated_at?: string;
           user_id?: string;
         };

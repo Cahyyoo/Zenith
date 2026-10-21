@@ -18,6 +18,9 @@ export const projectFormSchema = z.object({
     .regex(PROJECT_KEY_PATTERN, "2–10 characters, letters and digits, starting with a letter"),
   description: z.string().max(2000),
   color: tagColorSchema,
+  /** Feeds the Focus ranking: issues of important / soon-due projects rank higher. */
+  priority: issuePrioritySchema,
+  target_date: z.iso.date().nullable(),
 });
 export type ProjectFormValues = z.infer<typeof projectFormSchema>;
 

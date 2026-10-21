@@ -11,6 +11,18 @@ import type {
 import { rebalancedPositions } from "./lib/position";
 import type { Issue, Project } from "./types";
 
+/**
+ * Fills fields added by later migrations, for rows cached on the device (or
+ * served) before the migration ran, so ranking never sees `undefined`.
+ */
+export function normalizeProjects(projects: Project[]): Project[] {
+  return projects.map((project) => ({
+    ...project,
+    priority: project.priority ?? "medium",
+    target_date: project.target_date ?? null,
+  }));
+}
+
 export async function fetchProjects(): Promise<Project[]> {
   return unwrap(
     await getSupabase().from("projects").select("*").order("created_at", { ascending: true }),

@@ -9,6 +9,7 @@ import {
   SettingsIcon,
   SquareKanbanIcon,
   TagsIcon,
+  TargetIcon,
 } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
@@ -38,6 +39,7 @@ import { SyncIndicator } from "./sync-indicator";
 import { WorkspaceSwitcher } from "./workspace-switcher";
 
 function useNavItems(workspace: Workspace, pathname: string): NavItem[] {
+  const lastProjectId = useWorkspaceStore((state) => state.lastProjectId);
   return useMemo(() => {
     const settings: NavItem = {
       href: routes.settings,
@@ -54,15 +56,21 @@ function useNavItems(workspace: Workspace, pathname: string): NavItem[] {
     }
     return [
       {
-        href: routes.developer,
-        label: "Issues",
+        href: routes.focus,
+        label: "Focus",
+        icon: TargetIcon,
+        active: pathname === routes.developer || pathname.startsWith(routes.focus),
+      },
+      {
+        href: lastProjectId ? routes.board(lastProjectId) : routes.projects,
+        label: "Board",
         icon: SquareKanbanIcon,
-        active: pathname === routes.developer || pathname.startsWith("/d/board"),
+        active: pathname.startsWith("/d/board"),
       },
       { href: routes.projects, label: "Projects", icon: FolderKanbanIcon, active: pathname.startsWith(routes.projects) },
       settings,
     ];
-  }, [workspace, pathname]);
+  }, [workspace, pathname, lastProjectId]);
 }
 
 function useListItems(workspace: Workspace, pathname: string): NavListItem[] {

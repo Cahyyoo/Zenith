@@ -66,7 +66,7 @@ export function AppSidebar({
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map(({ href, label, icon: Icon, active }) => (
-                <SidebarMenuItem key={href}>
+                <SidebarMenuItem key={label}>
                   <SidebarMenuButton asChild isActive={active} tooltip={label}>
                     <Link href={href}>
                       <Icon />

@@ -4,9 +4,16 @@ import { issueFormSchema, projectFormSchema, suggestProjectKey } from "./schemas
 
 describe("projectFormSchema", () => {
   it("upper-cases and validates the project key", () => {
-    const parsed = projectFormSchema.parse({ name: "Zenith", key: " zen ", description: "", color: "blue" });
-    expect(parsed.key).toBe("ZEN");
-    expect(projectFormSchema.safeParse({ name: "Z", key: "1AB", description: "", color: "blue" }).success).toBe(false);
+    const base = { name: "Zenith", key: " zen ", description: "", color: "blue", priority: "medium", target_date: null };
+    expect(projectFormSchema.parse(base).key).toBe("ZEN");
+    expect(projectFormSchema.safeParse({ ...base, key: "1AB" }).success).toBe(false);
+  });
+
+  it("accepts an optional target date and a known priority", () => {
+    const base = { name: "Zenith", key: "ZEN", description: "", color: "blue", priority: "high", target_date: "2026-12-01" };
+    expect(projectFormSchema.safeParse(base).success).toBe(true);
+    expect(projectFormSchema.safeParse({ ...base, target_date: "next week" }).success).toBe(false);
+    expect(projectFormSchema.safeParse({ ...base, priority: "urgent" }).success).toBe(false);
   });
 });
 

@@ -8,19 +8,31 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { addDaysIso, formatDueDate, parseIsoDate, toIsoDate } from "@/lib/dates";
 
-type DueDatePickerProps = {
-  value: string | null;
-  onChange: (value: string | null) => void;
-  id?: string;
-};
+export type DateShortcut = { label: string; days: number };
 
-const SHORTCUTS = [
+const DEFAULT_SHORTCUTS: DateShortcut[] = [
   { label: "Today", days: 0 },
   { label: "Tomorrow", days: 1 },
   { label: "Next week", days: 7 },
-] as const;
+];
 
-export function DueDatePicker({ value, onChange, id }: DueDatePickerProps) {
+type DatePickerProps = {
+  value: string | null;
+  onChange: (value: string | null) => void;
+  id?: string;
+  /** Shown when no date is set, e.g. "No due date". */
+  emptyLabel?: string;
+  shortcuts?: DateShortcut[];
+};
+
+/** Optional calendar date (`yyyy-MM-dd`) with quick shortcuts and a clear button. */
+export function DatePicker({
+  value,
+  onChange,
+  id,
+  emptyLabel = "No date",
+  shortcuts = DEFAULT_SHORTCUTS,
+}: DatePickerProps) {
   const [open, setOpen] = useState(false);
 
   const pick = (next: string | null) => {
@@ -34,12 +46,12 @@ export function DueDatePicker({ value, onChange, id }: DueDatePickerProps) {
         <PopoverTrigger asChild>
           <Button id={id} type="button" variant="outline" className="justify-start font-normal">
             <CalendarIcon className="text-muted-foreground" />
-            {value ? formatDueDate(value) : <span className="text-muted-foreground">No due date</span>}
+            {value ? formatDueDate(value) : <span className="text-muted-foreground">{emptyLabel}</span>}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <div className="flex gap-1 border-b p-2">
-            {SHORTCUTS.map(({ label, days }) => (
+            {shortcuts.map(({ label, days }) => (
               <Button
                 key={label}
                 type="button"
@@ -64,7 +76,7 @@ export function DueDatePicker({ value, onChange, id }: DueDatePickerProps) {
           type="button"
           size="icon-sm"
           variant="ghost"
-          aria-label="Clear due date"
+          aria-label="Clear date"
           onClick={() => onChange(null)}
         >
           <XIcon />
