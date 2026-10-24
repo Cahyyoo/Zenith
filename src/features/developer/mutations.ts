@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 
 import { defineMutation } from "@/lib/query/define-mutation";
+import { timeKeys } from "@/features/time/keys";
 
 import * as api from "./api";
 import { developerKeys } from "./keys";
@@ -43,7 +44,7 @@ export const createProjectMutation = defineMutation<CreateProjectVars, ProjectsS
   ["developer", "projects", "create"],
   {
     mutationFn: api.insertProject,
-    invalidates: () => [developerKeys.projects()],
+    invalidates: () => [developerKeys.projects(), timeKeys.all],
     optimistic: (client, vars) => {
       const snapshot = snapshotProjects(client);
       updateProjects(client, (projects) => [
@@ -60,7 +61,7 @@ export const updateProjectMutation = defineMutation<UpdateProjectVars, ProjectsS
   ["developer", "projects", "update"],
   {
     mutationFn: api.updateProject,
-    invalidates: () => [developerKeys.projects()],
+    invalidates: () => [developerKeys.projects(), timeKeys.all],
     optimistic: (client, { id, patch }) => {
       const snapshot = snapshotProjects(client);
       updateProjects(client, (projects) =>
@@ -76,7 +77,7 @@ export const deleteProjectMutation = defineMutation<{ id: string }, ProjectsSnap
   ["developer", "projects", "delete"],
   {
     mutationFn: ({ id }) => api.deleteProject(id),
-    invalidates: () => [developerKeys.projects()],
+    invalidates: () => [developerKeys.projects(), timeKeys.all],
     optimistic: (client, { id }) => {
       const snapshot = snapshotProjects(client);
       updateProjects(client, (projects) => projects.filter((project) => project.id !== id));
@@ -91,7 +92,7 @@ export const createIssueMutation = defineMutation<CreateIssueVars, IssuesSnapsho
   ["developer", "issues", "create"],
   {
     mutationFn: api.insertIssue,
-    invalidates: (vars) => [developerKeys.issues(vars.project_id)],
+    invalidates: (vars) => [developerKeys.issues(vars.project_id), timeKeys.all],
     optimistic: (client, vars) => {
       const snapshot = snapshotIssues(client, vars.project_id);
       updateIssues(client, vars.project_id, (issues) => [
@@ -109,7 +110,7 @@ export const updateIssueMutation = defineMutation<UpdateIssueVars, IssuesSnapsho
   ["developer", "issues", "update"],
   {
     mutationFn: api.updateIssue,
-    invalidates: (vars) => [developerKeys.issues(vars.project_id)],
+    invalidates: (vars) => [developerKeys.issues(vars.project_id), timeKeys.all],
     optimistic: (client, { id, project_id, patch }) => {
       const snapshot = snapshotIssues(client, project_id);
       const now = new Date().toISOString();
@@ -126,7 +127,7 @@ export const deleteIssueMutation = defineMutation<{ id: string; project_id: stri
   ["developer", "issues", "delete"],
   {
     mutationFn: ({ id }) => api.deleteIssue(id),
-    invalidates: (vars) => [developerKeys.issues(vars.project_id)],
+    invalidates: (vars) => [developerKeys.issues(vars.project_id), timeKeys.all],
     optimistic: (client, { id, project_id }) => {
       const snapshot = snapshotIssues(client, project_id);
       updateIssues(client, project_id, (issues) => issues.filter((issue) => issue.id !== id));
@@ -140,7 +141,7 @@ export const rebalanceColumnMutation = defineMutation<RebalanceColumnVars, Issue
   ["developer", "issues", "rebalance"],
   {
     mutationFn: api.rebalanceColumn,
-    invalidates: (vars) => [developerKeys.issues(vars.project_id)],
+    invalidates: (vars) => [developerKeys.issues(vars.project_id), timeKeys.all],
     optimistic: (client, { project_id, status, ordered_ids }) => {
       const snapshot = snapshotIssues(client, project_id);
       const positions = rebalancedPositions(ordered_ids.length);

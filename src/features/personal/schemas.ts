@@ -20,7 +20,13 @@ export type CreateTaskVars = z.infer<typeof createTaskSchema>;
 
 export const updateTaskSchema = z.object({
   id: z.uuid(),
-  patch: taskFormSchema.partial().extend({ completed: z.boolean().optional() }),
+  patch: taskFormSchema.partial().extend({
+    completed: z.boolean().optional(),
+    /** "Sedang dikerjakan": time is tracked while doing and not completed. */
+    doing: z.boolean().optional(),
+    /** Device time of a status change; the server records time entries from it. */
+    status_changed_at: z.iso.datetime({ offset: true }).optional(),
+  }),
 });
 export type UpdateTaskVars = z.infer<typeof updateTaskSchema>;
 

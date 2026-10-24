@@ -48,8 +48,25 @@ export function useTaskActions() {
       (id: string, patch: Partial<TaskFormValues>) => update({ id, patch }),
       [update],
     ),
+    /** Completing also ends any running "Sedang dikerjakan" session. */
     setCompleted: useCallback(
-      (id: string, completed: boolean) => update({ id, patch: { completed } }),
+      (id: string, completed: boolean) =>
+        update({
+          id,
+          patch: completed
+            ? { completed, doing: false, status_changed_at: new Date().toISOString() }
+            : { completed, status_changed_at: new Date().toISOString() },
+        }),
+      [update],
+    ),
+    /** "Mulai": the task becomes "Sedang dikerjakan" and its time starts. */
+    startTask: useCallback(
+      (id: string) => update({ id, patch: { doing: true, status_changed_at: new Date().toISOString() } }),
+      [update],
+    ),
+    /** "Jeda": stops the running time; the task stays open. */
+    pauseTask: useCallback(
+      (id: string) => update({ id, patch: { doing: false, status_changed_at: new Date().toISOString() } }),
       [update],
     ),
     deleteTask: useCallback((task: Task) => remove({ id: task.id }), [remove]),

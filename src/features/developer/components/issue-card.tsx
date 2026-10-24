@@ -1,6 +1,7 @@
 import { CloudUploadIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 
+import { ElapsedBadge } from "@/features/time/components/elapsed-badge";
 import { ISSUE_TYPE_LABEL } from "@/lib/domain";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +39,9 @@ export function IssueCard({ issue, projectKey, dragging, overlay, className, ...
       <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
         <TypeIcon type={issue.type} />
         {ISSUE_TYPE_LABEL[issue.type]}
+        {issue.status === "in_progress" ? (
+          <ElapsedBadge since={issue.status_changed_at ?? null} className="ml-auto" />
+        ) : null}
       </span>
     </div>
   );

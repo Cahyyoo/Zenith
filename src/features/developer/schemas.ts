@@ -50,6 +50,7 @@ export const createIssueSchema = issueFormSchema.extend({
   id: z.uuid(),
   position: z.number(),
   created_at: z.iso.datetime({ offset: true }),
+  status_changed_at: z.iso.datetime({ offset: true }).nullable(),
 });
 export type CreateIssueVars = z.infer<typeof createIssueSchema>;
 
@@ -58,6 +59,8 @@ export const updateIssueSchema = z.object({
   project_id: z.uuid(),
   patch: issueFormSchema.omit({ project_id: true }).partial().extend({
     position: z.number().optional(),
+    /** Device time of a status change; the server records time entries from it. */
+    status_changed_at: z.iso.datetime({ offset: true }).optional(),
   }),
 });
 export type UpdateIssueVars = z.infer<typeof updateIssueSchema>;

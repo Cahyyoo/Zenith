@@ -34,6 +34,7 @@ function issue(overrides: Partial<Issue> & { project_id: string }): Issue {
     priority: "medium",
     status: "todo",
     position: seq * 1024,
+    status_changed_at: null,
     created_at: `2026-01-01T00:00:${String(seq).padStart(2, "0")}.000Z`,
     updated_at: "2026-01-01T00:00:00.000Z",
     ...overrides,

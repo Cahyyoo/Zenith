@@ -14,6 +14,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { routes } from "@/lib/routes";
 import { ISSUE_STATUSES, ISSUE_TYPES, ISSUE_TYPE_LABEL, type IssueStatus, type IssueType } from "@/lib/domain";
+import { toSession } from "@/features/time/api";
+import { TimeTracked } from "@/features/time/components/time-tracked";
+import { useItemEntries, useNow } from "@/features/time/hooks";
+import { closeLocallyStopped, mergeLocalRunning } from "@/features/time/lib/time";
 import { useWorkspaceStore } from "@/stores/workspace";
 
 import { BoardContext } from "../components/board-context";
@@ -41,6 +45,19 @@ export function BoardContainer() {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const project = projectsQuery.data?.find((p) => p.id === projectId);
+
+  // Time tracked for the issue open in the sheet, including unsynced local changes.
+  const issueEntries = useItemEntries("issue", issueId);
+  const now = useNow();
+  const sheetIssue = issueId ? issuesQuery.data?.find((issue) => issue.id === issueId) : undefined;
+  const sheetSessions = useMemo(() => {
+    if (!sheetIssue) return [];
+    const server = (issueEntries.data ?? []).map(toSession);
+    const changedAt = sheetIssue.status_changed_at ?? null;
+    return sheetIssue.status === "in_progress"
+      ? mergeLocalRunning(server, [{ itemId: sheetIssue.id, since: changedAt }])
+      : closeLocallyStopped(server, new Map([[sheetIssue.id, changedAt]]));
+  }, [issueEntries.data, sheetIssue]);
 
   useEffect(() => {
     if (project) setLastProjectId(project.id);
@@ -139,6 +156,12 @@ export function BoardContainer() {
               if (result.kind === "move") {
                 actions.updateIssue(projectId, id, { status: result.status, position: result.position });
               } else {
+                // A column change goes through updateIssue first so it carries
+                // the status timestamp used for time tracking.
+                const moved = allIssues.find((issue) => issue.id === id);
+                if (moved && moved.status !== result.status) {
+                  actions.updateIssue(projectId, id, { status: result.status });
+                }
                 actions.rebalanceColumn(projectId, result.status, result.orderedIds);
               }
             }}
@@ -185,6 +208,7 @@ export function BoardContainer() {
           closeIssue();
         }}
         onDelete={() => setConfirmDelete(true)}
+        timeTracked={<TimeTracked sessions={sheetSessions} now={now} />}
       />
 
       <ConfirmDialog

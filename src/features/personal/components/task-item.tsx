@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarIcon, EllipsisIcon, PencilIcon, Trash2Icon } from "lucide-react";
+import { CalendarIcon, EllipsisIcon, PauseIcon, PencilIcon, PlayIcon, Trash2Icon } from "lucide-react";
 import { motion, useAnimate, useMotionValue, useTransform, type PanInfo } from "motion/react";
 import { useRef } from "react";
 
@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ElapsedBadge } from "@/features/time/components/elapsed-badge";
 import { formatDueDate } from "@/lib/dates";
 import { listItemVariants } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,9 @@ type TaskItemProps = {
   onToggle: (completed: boolean) => void;
   onOpen: () => void;
   onDelete: () => void;
+  /** Start / pause "Sedang dikerjakan" (time tracking). */
+  onStart: () => void;
+  onPause: () => void;
 };
 
 const DUE_CLASSES = {
@@ -39,7 +43,8 @@ const DUE_CLASSES = {
   later: "text-muted-foreground",
 } as const;
 
-export function TaskItem({ task, tags, today, onToggle, onOpen, onDelete }: TaskItemProps) {
+export function TaskItem({ task, tags, today, onToggle, onOpen, onDelete, onStart, onPause }: TaskItemProps) {
+  const doing = Boolean(task.doing) && !task.completed;
   const [scope, animate] = useAnimate<HTMLDivElement>();
   const dragged = useRef(false);
   const x = useMotionValue(0);
@@ -90,7 +95,10 @@ export function TaskItem({ task, tags, today, onToggle, onOpen, onDelete }: Task
           dragged.current = true;
         }}
         onDragEnd={handleDragEnd}
-        className="relative flex items-start gap-3 border bg-card px-3 py-3 select-none"
+        className={cn(
+          "relative flex items-start gap-3 border bg-card px-3 py-3 transition-colors select-none",
+          doing && "border-primary/40 bg-primary/[0.03]",
+        )}
         style={{ x, borderRadius: "inherit" }}
       >
         <motion.span
@@ -123,8 +131,9 @@ export function TaskItem({ task, tags, today, onToggle, onOpen, onDelete }: Task
           >
             {task.title}
           </span>
-          {due || tags.length > 0 ? (
+          {doing || due || tags.length > 0 ? (
             <span className="flex flex-wrap items-center gap-1.5">
+              {doing ? <ElapsedBadge since={task.status_changed_at} label="Sedang dikerjakan" /> : null}
               {due && task.due_date ? (
                 <span className={cn("inline-flex items-center gap-1 text-xs", DUE_CLASSES[due])}>
                   <CalendarIcon className="size-3" />
@@ -137,6 +146,19 @@ export function TaskItem({ task, tags, today, onToggle, onOpen, onDelete }: Task
             </span>
           ) : null}
         </button>
+
+        {task.completed ? null : (
+          <Button
+            variant={doing ? "secondary" : "ghost"}
+            size="icon-sm"
+            onClick={doing ? onPause : onStart}
+            aria-label={doing ? `Jeda "${task.title}"` : `Mulai "${task.title}"`}
+            title={doing ? "Jeda — hentikan waktu" : "Mulai — catat waktu"}
+            className={cn("-my-1 transition-colors", doing ? "text-primary" : "text-muted-foreground")}
+          >
+            {doing ? <PauseIcon /> : <PlayIcon />}
+          </Button>
+        )}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  CalendarDaysIcon,
+  ChartColumnIcon,
   CircleUserIcon,
   DownloadIcon,
   FolderKanbanIcon,
@@ -50,6 +52,7 @@ function useNavItems(workspace: Workspace, pathname: string): NavItem[] {
     if (workspace === "personal") {
       return [
         { href: routes.personal, label: "Tasks", icon: ListTodoIcon, active: pathname === routes.personal },
+        { href: routes.calendar, label: "Calendar", icon: CalendarDaysIcon, active: pathname.startsWith(routes.calendar) },
         { href: routes.tags, label: "Tags", icon: TagsIcon, active: pathname.startsWith(routes.tags) },
         settings,
       ];
@@ -67,6 +70,7 @@ function useNavItems(workspace: Workspace, pathname: string): NavItem[] {
         icon: SquareKanbanIcon,
         active: pathname.startsWith("/d/board"),
       },
+      { href: routes.report, label: "Report", icon: ChartColumnIcon, active: pathname.startsWith(routes.report) },
       { href: routes.projects, label: "Projects", icon: FolderKanbanIcon, active: pathname.startsWith(routes.projects) },
       settings,
     ];

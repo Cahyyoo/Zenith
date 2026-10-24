@@ -11,6 +11,8 @@ function task(overrides: Partial<Task> & { id: string }): Task {
     due_date: null,
     completed: false,
     completed_at: null,
+    doing: false,
+    status_changed_at: null,
     created_at: "2026-01-01T00:00:00.000Z",
     updated_at: "2026-01-01T00:00:00.000Z",
     tag_ids: [],
@@ -37,6 +39,15 @@ describe("sortTasks", () => {
       task({ id: "new-done", completed: true, completed_at: "2026-01-05T00:00:00.000Z" }),
     ]);
     expect(sorted.map((t) => t.id)).toEqual(["a", "b", "new-done", "old-done"]);
+  });
+
+  it("puts tasks being worked on first among open tasks", () => {
+    const sorted = sortTasks([
+      task({ id: "urgent", due_date: "2026-01-01" }),
+      task({ id: "doing", doing: true }),
+      task({ id: "done-but-doing", completed: true, doing: true, completed_at: "2026-01-02T00:00:00.000Z" }),
+    ]);
+    expect(sorted.map((t) => t.id)).toEqual(["doing", "urgent", "done-but-doing"]);
   });
 
   it("does not mutate its input", () => {

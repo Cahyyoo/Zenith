@@ -25,6 +25,7 @@ export type Database = {
           priority: Database["public"]["Enums"]["issue_priority"];
           project_id: string;
           status: Database["public"]["Enums"]["issue_status"];
+          status_changed_at: string | null;
           title: string;
           type: Database["public"]["Enums"]["issue_type"];
           updated_at: string;
@@ -39,6 +40,7 @@ export type Database = {
           priority?: Database["public"]["Enums"]["issue_priority"];
           project_id: string;
           status?: Database["public"]["Enums"]["issue_status"];
+          status_changed_at?: string | null;
           title: string;
           type?: Database["public"]["Enums"]["issue_type"];
           updated_at?: string;
@@ -53,6 +55,7 @@ export type Database = {
           priority?: Database["public"]["Enums"]["issue_priority"];
           project_id?: string;
           status?: Database["public"]["Enums"]["issue_status"];
+          status_changed_at?: string | null;
           title?: string;
           type?: Database["public"]["Enums"]["issue_type"];
           updated_at?: string;
@@ -106,9 +109,11 @@ export type Database = {
           completed: boolean;
           completed_at: string | null;
           created_at: string;
+          doing: boolean;
           due_date: string | null;
           id: string;
           notes: string;
+          status_changed_at: string | null;
           title: string;
           updated_at: string;
           user_id: string;
@@ -117,9 +122,11 @@ export type Database = {
           completed?: boolean;
           completed_at?: string | null;
           created_at?: string;
+          doing?: boolean;
           due_date?: string | null;
           id?: string;
           notes?: string;
+          status_changed_at?: string | null;
           title: string;
           updated_at?: string;
           user_id?: string;
@@ -128,9 +135,11 @@ export type Database = {
           completed?: boolean;
           completed_at?: string | null;
           created_at?: string;
+          doing?: boolean;
           due_date?: string | null;
           id?: string;
           notes?: string;
+          status_changed_at?: string | null;
           title?: string;
           updated_at?: string;
           user_id?: string;
@@ -205,6 +214,51 @@ export type Database = {
           user_id?: string;
         };
         Relationships: [];
+      };
+      time_entries: {
+        Row: {
+          created_at: string;
+          ended_at: string | null;
+          id: string;
+          issue_id: string | null;
+          started_at: string;
+          task_id: string | null;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          ended_at?: string | null;
+          id?: string;
+          issue_id?: string | null;
+          started_at: string;
+          task_id?: string | null;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          ended_at?: string | null;
+          id?: string;
+          issue_id?: string | null;
+          started_at?: string;
+          task_id?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "time_entries_issue_id_fkey";
+            columns: ["issue_id"];
+            isOneToOne: false;
+            referencedRelation: "issues";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "time_entries_task_id_fkey";
+            columns: ["task_id"];
+            isOneToOne: false;
+            referencedRelation: "personal_tasks";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Views: {

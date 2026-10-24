@@ -115,6 +115,8 @@ export function TaskListContainer() {
           onToggle={(task, value) => actions.setCompleted(task.id, value)}
           onOpen={(task) => setEditingId(task.id)}
           onDelete={handleDelete}
+          onStart={(task) => actions.startTask(task.id)}
+          onPause={(task) => actions.pauseTask(task.id)}
         />
       )}
 

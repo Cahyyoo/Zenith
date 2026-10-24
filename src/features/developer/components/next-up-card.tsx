@@ -4,6 +4,7 @@ import { ArrowRightIcon, CheckIcon, PlayIcon, TargetIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
 import { ColorDot } from "@/components/common/color-picker";
+import { ElapsedBadge } from "@/features/time/components/elapsed-badge";
 import { Button } from "@/components/ui/button";
 import { EASE_OUT } from "@/lib/motion";
 
@@ -50,7 +51,10 @@ export function NextUpCard({ item, onOpen, onStart, onDone }: NextUpCardProps) {
           </span>
           {issue.title}
         </h2>
-        <ReasonChips reasons={reasons} className="mt-2" />
+        <span className="mt-2 flex flex-wrap items-center gap-1">
+          {started ? <ElapsedBadge since={issue.status_changed_at ?? null} label="In progress" /> : null}
+          <ReasonChips reasons={reasons} />
+        </span>
         <div className="mt-4 flex flex-wrap gap-2">
           {started ? (
             <Button onClick={onDone}>

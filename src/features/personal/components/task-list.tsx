@@ -19,9 +19,11 @@ type TaskListProps = {
   onToggle: (task: Task, completed: boolean) => void;
   onOpen: (task: Task) => void;
   onDelete: (task: Task) => void;
+  onStart: (task: Task) => void;
+  onPause: (task: Task) => void;
 };
 
-export function TaskList({ open, completed, today, onToggle, onOpen, onDelete }: TaskListProps) {
+export function TaskList({ open, completed, today, onToggle, onOpen, onDelete, onStart, onPause }: TaskListProps) {
   const [showCompleted, setShowCompleted] = useState(false);
 
   const renderRow = ({ task, tags }: TaskRow) => (
@@ -33,6 +35,8 @@ export function TaskList({ open, completed, today, onToggle, onOpen, onDelete }:
       onToggle={(value) => onToggle(task, value)}
       onOpen={() => onOpen(task)}
       onDelete={() => onDelete(task)}
+      onStart={() => onStart(task)}
+      onPause={() => onPause(task)}
     />
   );
 

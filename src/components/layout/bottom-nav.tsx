@@ -8,13 +8,16 @@ import { cn } from "@/lib/utils";
 
 import type { NavItem } from "./nav";
 
+// Literal class names so Tailwind generates them.
+const COLUMNS: Record<number, string> = { 3: "grid-cols-3", 4: "grid-cols-4", 5: "grid-cols-5" };
+
 export function BottomNav({ items }: { items: NavItem[] }) {
   return (
     <nav
       aria-label="Primary"
       className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur transition-colors md:hidden"
     >
-      <ul className={cn("mx-auto grid max-w-md", items.length === 4 ? "grid-cols-4" : "grid-cols-3")}>
+      <ul className={cn("mx-auto grid max-w-md", COLUMNS[items.length] ?? "grid-cols-3")}>
         {items.map(({ href, label, icon: Icon, active }) => (
           <li key={label}>
             <Link
@@ -25,7 +28,7 @@ export function BottomNav({ items }: { items: NavItem[] }) {
                 active ? "text-primary" : "text-muted-foreground",
               )}
             >
-              <motion.span whileTap={{ scale: 0.88 }} className="relative flex h-8 w-14 items-center justify-center">
+              <motion.span whileTap={{ scale: 0.88 }} className="relative flex h-8 w-12 items-center justify-center">
                 {active ? (
                   <motion.span
                     layoutId="bottom-nav-active"

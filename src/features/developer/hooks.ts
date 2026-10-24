@@ -85,13 +85,23 @@ export function useIssueActions() {
 
   return {
     createIssue: useCallback(
-      (values: IssueFormValues, position: number) =>
-        create({ ...values, position, id: crypto.randomUUID(), created_at: new Date().toISOString() }),
+      (values: IssueFormValues, position: number) => {
+        const now = new Date().toISOString();
+        create({ ...values, position, id: crypto.randomUUID(), created_at: now, status_changed_at: now });
+      },
       [create],
     ),
+    /**
+     * Any status change is stamped with the device time, so time tracking
+     * (In Progress sessions) stays accurate even when synced later.
+     */
     updateIssue: useCallback(
       (projectId: string, id: string, patch: UpdateIssueVars["patch"]) =>
-        update({ id, project_id: projectId, patch }),
+        update({
+          id,
+          project_id: projectId,
+          patch: patch.status ? { status_changed_at: new Date().toISOString(), ...patch } : patch,
+        }),
       [update],
     ),
     deleteIssue: useCallback(

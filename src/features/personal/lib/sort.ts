@@ -1,8 +1,9 @@
 import type { Task } from "../types";
 
 /**
- * Open tasks first, ordered by the nearest due date (undated last, then by
- * creation). Completed tasks follow, most recently completed first.
+ * Open tasks first — the ones being worked on ("Sedang dikerjakan") on top —
+ * ordered by the nearest due date (undated last, then by creation).
+ * Completed tasks follow, most recently completed first.
  */
 export function compareTasks(a: Task, b: Task): number {
   if (a.completed !== b.completed) return a.completed ? 1 : -1;
@@ -10,6 +11,8 @@ export function compareTasks(a: Task, b: Task): number {
   if (a.completed) {
     return (b.completed_at ?? "").localeCompare(a.completed_at ?? "");
   }
+
+  if (Boolean(a.doing) !== Boolean(b.doing)) return a.doing ? -1 : 1;
 
   if (a.due_date !== b.due_date) {
     if (a.due_date === null) return 1;

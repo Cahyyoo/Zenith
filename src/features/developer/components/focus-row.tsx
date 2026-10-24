@@ -4,6 +4,7 @@ import { CheckIcon, PlayIcon } from "lucide-react";
 import { motion } from "motion/react";
 
 import { ColorDot } from "@/components/common/color-picker";
+import { ElapsedBadge } from "@/features/time/components/elapsed-badge";
 import { Button } from "@/components/ui/button";
 import { listItemVariants } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -70,7 +71,12 @@ export function FocusRow({ item, rank, onOpen, onStart, onDone }: FocusRowProps)
             <TypeIcon type={issue.type} />
             <span className="truncate text-[13px] font-medium">{issue.title}</span>
           </span>
-          <ReasonChips reasons={reasons} />
+          {started || reasons.length > 0 ? (
+            <span className="flex flex-wrap items-center gap-1">
+              {started ? <ElapsedBadge since={issue.status_changed_at ?? null} /> : null}
+              <ReasonChips reasons={reasons} />
+            </span>
+          ) : null}
         </button>
         {started ? (
           <Button size="sm" variant="outline" onClick={onDone} aria-label={`Mark ${issue.title} done`}>

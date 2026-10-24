@@ -1,9 +1,11 @@
 export const routes = {
   personal: "/p",
   tags: "/p/tags",
+  calendar: "/p/calendar",
   tasksWithTag: (tagId: string) => `/p?tag=${encodeURIComponent(tagId)}`,
   developer: "/d",
   focus: "/d/focus",
+  report: "/d/report",
   projects: "/d/projects",
   board: (projectId: string, issueId?: string) => {
     const params = new URLSearchParams({ project: projectId });

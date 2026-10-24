@@ -2,6 +2,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { Trash2Icon } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -17,9 +18,11 @@ type IssueDetailSheetProps = {
   onClose: () => void;
   onSave: (values: IssueFormValues) => void;
   onDelete: () => void;
+  /** Time-tracking summary for this issue. */
+  timeTracked?: ReactNode;
 };
 
-export function IssueDetailSheet({ issue, projectKey, onClose, onSave, onDelete }: IssueDetailSheetProps) {
+export function IssueDetailSheet({ issue, projectKey, onClose, onSave, onDelete, timeTracked }: IssueDetailSheetProps) {
   return (
     <Sheet
       open={issue !== undefined}
@@ -37,7 +40,8 @@ export function IssueDetailSheet({ issue, projectKey, onClose, onSave, onDelete 
               </SheetDescription>
               <SheetTitle className="pr-8 text-base leading-snug">{issue.title}</SheetTitle>
             </SheetHeader>
-            <div className="p-4">
+            <div className="flex flex-col gap-4 p-4">
+              {timeTracked}
               <IssueForm
                 key={`${issue.id}:${issue.updated_at}`}
                 submitLabel="Save changes"

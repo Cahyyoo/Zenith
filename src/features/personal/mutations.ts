@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 
 import { defineMutation } from "@/lib/query/define-mutation";
+import { timeKeys } from "@/features/time/keys";
 
 import * as api from "./api";
 import { personalKeys } from "./keys";
@@ -34,7 +35,8 @@ function restoreTags(client: QueryClient, snapshot: TagSnapshot) {
   client.setQueryData(personalKeys.tags(), snapshot.tagList);
 }
 
-const taskQueries = () => [personalKeys.tasks()];
+// Status changes create time entries on the server, so the calendar refreshes too.
+const taskQueries = () => [personalKeys.tasks(), timeKeys.all];
 const tagQueries = () => [personalKeys.tags(), personalKeys.tasks()];
 
 export const createTaskMutation = defineMutation<CreateTaskVars, TaskSnapshot>(
@@ -52,6 +54,8 @@ export const createTaskMutation = defineMutation<CreateTaskVars, TaskSnapshot>(
           user_id: "",
           completed: false,
           completed_at: null,
+          doing: false,
+          status_changed_at: null,
           updated_at: now,
         },
       ]);

@@ -8,6 +8,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { ColorDot } from "@/components/common/color-picker";
+import { FilterChip } from "@/components/common/filter-chip";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
 import { Button } from "@/components/ui/button";
@@ -245,21 +246,5 @@ function Stat({ label, value, tone }: { label: string; value: number; tone?: "da
     >
       <span className="font-semibold text-foreground tabular-nums">{value}</span> {label}
     </span>
-  );
-}
-
-function FilterChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-        active ? "border-primary bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground",
-      )}
-    >
-      {children}
-    </button>
   );
 }
