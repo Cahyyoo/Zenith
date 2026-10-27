@@ -15,6 +15,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useSession } from "@/features/auth/session-provider";
 import { InstallCard } from "@/features/pwa/install-card";
 import { useSyncStatus } from "@/lib/query/use-sync-status";
+import { WorkHoursSection } from "@/features/settings/containers/work-hours-section";
 import { routes } from "@/lib/routes";
 import { useWorkspaceStore } from "@/stores/workspace";
 
@@ -68,6 +69,13 @@ export function SettingsContainer() {
           description="Add Zenith to your home screen or desktop. It opens in its own window and works offline."
         >
           <InstallCard />
+        </Section>
+
+        <Section
+          title="Working hours"
+          description="Developer time is only counted within these hours, so nights, weekends and idle In Progress cards don't inflate reports."
+        >
+          <WorkHoursSection />
         </Section>
 
         <Section title="Workspace" description="Where Zenith opens, and which accent it uses.">

@@ -3,6 +3,7 @@ import type { ComponentProps } from "react";
 
 import { ElapsedBadge } from "@/features/time/components/elapsed-badge";
 import { ISSUE_TYPE_LABEL } from "@/lib/domain";
+import type { WorkSchedule } from "@/lib/work-schedule";
 import { cn } from "@/lib/utils";
 
 import type { Issue } from "../types";
@@ -13,9 +14,11 @@ type IssueCardProps = ComponentProps<"div"> & {
   projectKey: string;
   dragging?: boolean;
   overlay?: boolean;
+  /** Working hours for the live timer (time outside them is not counted). */
+  schedule?: WorkSchedule;
 };
 
-export function IssueCard({ issue, projectKey, dragging, overlay, className, ...props }: IssueCardProps) {
+export function IssueCard({ issue, projectKey, dragging, overlay, schedule, className, ...props }: IssueCardProps) {
   const unsynced = issue.number === null;
 
   return (
@@ -40,7 +43,7 @@ export function IssueCard({ issue, projectKey, dragging, overlay, className, ...
         <TypeIcon type={issue.type} />
         {ISSUE_TYPE_LABEL[issue.type]}
         {issue.status === "in_progress" ? (
-          <ElapsedBadge since={issue.status_changed_at ?? null} className="ml-auto" />
+          <ElapsedBadge since={issue.status_changed_at ?? null} schedule={schedule} className="ml-auto" />
         ) : null}
       </span>
     </div>

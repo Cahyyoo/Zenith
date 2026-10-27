@@ -18,6 +18,7 @@ import { toSession } from "@/features/time/api";
 import { TimeTracked } from "@/features/time/components/time-tracked";
 import { useItemEntries, useNow } from "@/features/time/hooks";
 import { closeLocallyStopped, mergeLocalRunning } from "@/features/time/lib/time";
+import { useWorkSchedule } from "@/features/settings/hooks";
 import { useWorkspaceStore } from "@/stores/workspace";
 
 import { BoardContext } from "../components/board-context";
@@ -48,6 +49,7 @@ export function BoardContainer() {
 
   // Time tracked for the issue open in the sheet, including unsynced local changes.
   const issueEntries = useItemEntries("issue", issueId);
+  const schedule = useWorkSchedule();
   const now = useNow();
   const sheetIssue = issueId ? issuesQuery.data?.find((issue) => issue.id === issueId) : undefined;
   const sheetSessions = useMemo(() => {
@@ -80,8 +82,9 @@ export function BoardContainer() {
         if (projectId) router.replace(routes.board(projectId, id), { scroll: false });
       },
       onAddIssue: (status: IssueStatus) => setCreatingIn(status),
+      schedule,
     }),
-    [project?.key, projectId, router],
+    [project?.key, projectId, router, schedule],
   );
 
   if (!projectId || (projectsQuery.isSuccess && !project)) {
@@ -208,7 +211,7 @@ export function BoardContainer() {
           closeIssue();
         }}
         onDelete={() => setConfirmDelete(true)}
-        timeTracked={<TimeTracked sessions={sheetSessions} now={now} />}
+        timeTracked={<TimeTracked sessions={sheetSessions} now={now} schedule={schedule} />}
       />
 
       <ConfirmDialog

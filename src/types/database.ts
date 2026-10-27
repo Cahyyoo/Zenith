@@ -260,6 +260,24 @@ export type Database = {
           },
         ];
       };
+      user_settings: {
+        Row: {
+          updated_at: string;
+          user_id: string;
+          work_schedule: Json;
+        };
+        Insert: {
+          updated_at?: string;
+          user_id?: string;
+          work_schedule: Json;
+        };
+        Update: {
+          updated_at?: string;
+          user_id?: string;
+          work_schedule?: Json;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

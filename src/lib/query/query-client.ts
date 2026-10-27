@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { isNetworkError } from "@/lib/api-error";
 import { personalMutations } from "@/features/personal/mutations";
 import { developerMutations } from "@/features/developer/mutations";
+import { settingsMutations } from "@/features/settings/mutations";
 
 export const CACHE_MAX_AGE = 1000 * 60 * 60 * 24 * 7; // 7 days
 
@@ -33,7 +34,7 @@ export function makeQueryClient(): QueryClient {
     },
   });
 
-  for (const definition of [...personalMutations, ...developerMutations]) {
+  for (const definition of [...personalMutations, ...developerMutations, ...settingsMutations]) {
     definition.register(client);
   }
 

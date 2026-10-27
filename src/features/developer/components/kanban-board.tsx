@@ -20,6 +20,7 @@ import { ISSUE_STATUSES, type IssueStatus } from "@/lib/domain";
 
 import { groupIssues, moveAcross, reorderWithin, resolveDrop, type Columns, type DropResult } from "../lib/board";
 import type { Issue } from "../types";
+import { useBoard } from "./board-context";
 import { IssueCard } from "./issue-card";
 import { KanbanColumn } from "./kanban-column";
 
@@ -38,6 +39,7 @@ type DragState = { activeId: string | null; base: Issue[]; start: Columns; colum
 
 export function KanbanBoard({ issues, projectKey, onDrop }: KanbanBoardProps) {
   const [drag, setDrag] = useState<DragState | null>(null);
+  const { schedule } = useBoard();
 
   const issuesById = useMemo(() => new Map(issues.map((issue) => [issue.id, issue])), [issues]);
   const grouped = useMemo(() => groupIssues(issues), [issues]);
@@ -103,7 +105,7 @@ export function KanbanBoard({ issues, projectKey, onDrop }: KanbanBoardProps) {
       </div>
 
       <DragOverlay dropAnimation={{ duration: 160, easing: "cubic-bezier(0.2, 0, 0, 1)" }}>
-        {activeIssue ? <IssueCard issue={activeIssue} projectKey={projectKey} overlay /> : null}
+        {activeIssue ? <IssueCard issue={activeIssue} projectKey={projectKey} schedule={schedule} overlay /> : null}
       </DragOverlay>
     </DndContext>
   );

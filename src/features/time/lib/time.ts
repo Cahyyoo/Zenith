@@ -1,6 +1,7 @@
 import { addDays, endOfMonth, endOfWeek, format, startOfDay, startOfMonth, startOfWeek } from "date-fns";
 
 import type { TagColor } from "@/lib/domain";
+import { workWindow, type WorkSchedule } from "@/lib/work-schedule";
 
 /** A tracked work session for one task or issue. `end === null` means it is still running. */
 export type Session = {
@@ -24,7 +25,14 @@ export type Segment = { start: number; end: number; running: boolean };
 
 export type DayItem = ItemInfo & { itemId: string; ms: number; segments: Segment[] };
 
-export type DaySummary = { date: string; totalMs: number; items: DayItem[] };
+export type DaySummary = {
+  date: string;
+  /** Real time worked that day: overlapping items count once. */
+  totalMs: number;
+  /** How much item time overlapped (sum of items minus the real total). */
+  overlapMs: number;
+  items: DayItem[];
+};
 
 export type GroupTotal = { key: string; label: string; color: TagColor; ms: number };
 
@@ -49,23 +57,68 @@ export function splitByDay(session: Session, now: number): { date: string; segme
 }
 
 /**
- * Builds per-day summaries: total time and what was worked on each date.
- * Sessions whose item can't be described (e.g. filtered out) are skipped.
+ * Limits a same-day segment to that day's working window. Returns null when
+ * nothing of it falls within working hours (day off, before/after hours).
+ */
+export function clipToSchedule(segment: Segment, schedule: WorkSchedule): Segment | null {
+  const window = workWindow(schedule, segment.start);
+  if (!window) return null;
+  const start = Math.max(segment.start, window.start);
+  const end = Math.min(segment.end, window.end);
+  if (end <= start) return null;
+  return { start, end, running: segment.running && end === segment.end };
+}
+
+/** Length of the union of intervals: overlapping time is counted once. */
+export function unionMs(segments: readonly Pick<Segment, "start" | "end">[]): number {
+  const sorted = [...segments].sort((a, b) => a.start - b.start);
+  let total = 0;
+  let currentStart = -Infinity;
+  let currentEnd = -Infinity;
+  for (const { start, end } of sorted) {
+    if (start > currentEnd) {
+      if (currentEnd > currentStart) total += currentEnd - currentStart;
+      currentStart = start;
+      currentEnd = end;
+    } else if (end > currentEnd) {
+      currentEnd = end;
+    }
+  }
+  if (currentEnd > currentStart) total += currentEnd - currentStart;
+  return total;
+}
+
+/** Time of a session that falls within working hours (all of it without a schedule). */
+export function sessionDuration(session: Session, now: number, schedule?: WorkSchedule): number {
+  return splitByDay(session, now).reduce((sum, { segment }) => {
+    const counted = schedule ? clipToSchedule(segment, schedule) : segment;
+    return counted ? sum + (counted.end - counted.start) : sum;
+  }, 0);
+}
+
+/**
+ * Builds per-day summaries: what was worked on each date and for how long.
+ * Each item keeps its full duration; the day total is real time, so items
+ * worked on in parallel are not double-counted. With a `schedule`, only time
+ * inside working hours counts. Items that can't be described are skipped.
  */
 export function buildCalendar(
   sessions: readonly Session[],
   now: number,
   describe: (itemId: string) => ItemInfo | undefined,
+  options: { schedule?: WorkSchedule } = {},
 ): Map<string, DaySummary> {
   const days = new Map<string, DaySummary>();
 
   for (const session of sessions) {
     const info = describe(session.itemId);
     if (!info) continue;
-    for (const { date, segment } of splitByDay(session, now)) {
+    for (const part of splitByDay(session, now)) {
+      const segment = options.schedule ? clipToSchedule(part.segment, options.schedule) : part.segment;
+      if (!segment) continue;
       const ms = segment.end - segment.start;
       if (ms <= 0) continue;
-      const day = days.get(date) ?? { date, totalMs: 0, items: [] };
+      const day = days.get(part.date) ?? { date: part.date, totalMs: 0, overlapMs: 0, items: [] };
       let item = day.items.find((candidate) => candidate.itemId === session.itemId);
       if (!item) {
         item = { ...info, itemId: session.itemId, ms: 0, segments: [] };
@@ -73,26 +126,34 @@ export function buildCalendar(
       }
       item.ms += ms;
       item.segments.push(segment);
-      day.totalMs += ms;
-      days.set(date, day);
+      days.set(part.date, day);
     }
   }
 
   for (const day of days.values()) {
     day.items.sort((a, b) => b.ms - a.ms);
     for (const item of day.items) item.segments.sort((a, b) => a.start - b.start);
+    day.totalMs = unionMs(day.items.flatMap((item) => item.segments));
+    day.overlapMs = day.items.reduce((sum, item) => sum + item.ms, 0) - day.totalMs;
   }
   return days;
 }
 
-/** Totals per group (project / tag) for the given days, largest first. */
+/**
+ * Real time per group (project / tag) for the given days, largest first.
+ * Overlap within a group on the same day is counted once.
+ */
 export function groupTotals(days: Iterable<DaySummary>): GroupTotal[] {
   const totals = new Map<string, GroupTotal>();
   for (const day of days) {
-    for (const item of day.items) {
-      const total = totals.get(item.groupKey) ?? { key: item.groupKey, label: item.groupLabel, color: item.color, ms: 0 };
-      total.ms += item.ms;
-      totals.set(item.groupKey, total);
+    const byGroup = new Map<string, DayItem[]>();
+    for (const item of day.items) byGroup.set(item.groupKey, [...(byGroup.get(item.groupKey) ?? []), item]);
+    for (const [key, items] of byGroup) {
+      const first = items[0];
+      if (!first) continue;
+      const total = totals.get(key) ?? { key, label: first.groupLabel, color: first.color, ms: 0 };
+      total.ms += unionMs(items.flatMap((item) => item.segments));
+      totals.set(key, total);
     }
   }
   return [...totals.values()].sort((a, b) => b.ms - a.ms);

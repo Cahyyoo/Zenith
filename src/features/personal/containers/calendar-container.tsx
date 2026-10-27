@@ -75,7 +75,10 @@ export function CalendarContainer() {
 
   return (
     <div className="mx-auto w-full max-w-5xl">
-      <PageHeader title="Calendar" description="What you worked on each day, and what's due." />
+      <PageHeader
+        title="Calendar"
+        description="What you worked on each day, and what's due. Counts any time of day; overlapping tasks count once in totals."
+      />
 
       {entries.isPending && tasksQuery.isPending ? (
         <Skeleton className="h-96 rounded-[var(--radius)]" />

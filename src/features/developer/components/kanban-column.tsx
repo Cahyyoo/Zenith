@@ -66,7 +66,7 @@ export function KanbanColumn({ status, issues }: KanbanColumnProps) {
 }
 
 function SortableIssueCard({ issue }: { issue: Issue }) {
-  const { projectKey, onOpenIssue } = useBoard();
+  const { projectKey, onOpenIssue, schedule } = useBoard();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: issue.id });
 
   return (
@@ -74,6 +74,7 @@ function SortableIssueCard({ issue }: { issue: Issue }) {
       ref={setNodeRef}
       issue={issue}
       projectKey={projectKey}
+      schedule={schedule}
       dragging={isDragging}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className="cursor-grab touch-manipulation"

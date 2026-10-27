@@ -3,11 +3,14 @@
 import { createContext, useContext } from "react";
 
 import type { IssueStatus } from "@/lib/domain";
+import type { WorkSchedule } from "@/lib/work-schedule";
 
 type BoardContextValue = {
   projectKey: string;
   onOpenIssue: (id: string) => void;
   onAddIssue: (status: IssueStatus) => void;
+  /** Working hours for live timers on cards. */
+  schedule: WorkSchedule;
 };
 
 /** Shared board callbacks, so columns and cards don't need prop drilling. */

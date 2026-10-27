@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
+import { DEFAULT_SCHEDULE, type WorkSchedule } from "@/lib/work-schedule";
+
 import {
   buildCalendar,
+  clipToSchedule,
+  sessionDuration,
+  unionMs,
   closeLocallyStopped,
   formatDuration,
   formatHoursShort,
@@ -122,5 +127,69 @@ describe("local state before sync", () => {
       new Map([["a", new Date(at(20, 12)).toISOString()]]),
     );
     expect(closed.map((s) => s.end)).toEqual([at(20, 12), null]);
+  });
+});
+
+// October 2026: the 19th–23rd are Monday–Friday, the 24th/25th the weekend.
+describe("working hours", () => {
+  it("clips a segment to the day's working window", () => {
+    expect(clipToSchedule({ start: at(20, 7), end: at(20, 20), running: false }, DEFAULT_SCHEDULE)).toEqual({
+      start: at(20, 9),
+      end: at(20, 17),
+      running: false,
+    });
+    expect(clipToSchedule({ start: at(20, 18), end: at(20, 22), running: false }, DEFAULT_SCHEDULE)).toBeNull();
+  });
+
+  it("ignores days off", () => {
+    expect(clipToSchedule({ start: at(24, 10), end: at(24, 12), running: false }, DEFAULT_SCHEDULE)).toBeNull();
+    const saturday: WorkSchedule = DEFAULT_SCHEDULE.map((day, index) =>
+      index === 5 ? { enabled: true, start: "10:00", end: "14:00" } : day,
+    );
+    expect(clipToSchedule({ start: at(24, 9), end: at(24, 18), running: false }, saturday)).toEqual({
+      start: at(24, 10),
+      end: at(24, 14),
+      running: false,
+    });
+  });
+
+  it("counts a multi-day In Progress session only within working hours", () => {
+    // Friday 16:00 → Monday 10:00: 1h Friday + 1h Monday, nothing on the weekend.
+    const session: Session = { id: "s", itemId: "a", start: at(23, 16), end: at(26, 10) };
+    expect(sessionDuration(session, at(27, 0), DEFAULT_SCHEDULE)).toBe(2 * HOUR);
+    expect(sessionDuration(session, at(27, 0))).toBe(66 * HOUR);
+  });
+});
+
+describe("real-time totals", () => {
+  it("merges overlapping intervals", () => {
+    expect(unionMs([{ start: 0, end: 10 }, { start: 5, end: 15 }, { start: 20, end: 30 }])).toBe(25);
+    expect(unionMs([])).toBe(0);
+  });
+
+  it("counts parallel issues once in the day total but keeps each issue's full time", () => {
+    // Four issues In Progress for days, like leaving several cards in the column.
+    const sessions: Session[] = ["a", "b", "c", "d"].map((itemId) => ({ id: itemId, itemId, start: at(19, 0), end: null }));
+    const days = buildCalendar(sessions, at(21, 12), (id) => info(id), { schedule: DEFAULT_SCHEDULE });
+    const tuesday = days.get("2026-10-20");
+    expect(tuesday?.totalMs).toBe(8 * HOUR);
+    expect(tuesday?.items.map((item) => item.ms / HOUR)).toEqual([8, 8, 8, 8]);
+    expect(tuesday?.overlapMs).toBe(24 * HOUR);
+    // Wednesday until noon: 3h of working time so far.
+    expect(days.get("2026-10-21")?.totalMs).toBe(3 * HOUR);
+  });
+
+  it("totals groups as real time per day", () => {
+    const sessions: Session[] = [
+      { id: "1", itemId: "a", start: at(20, 9), end: at(20, 12) },
+      { id: "2", itemId: "b", start: at(20, 10), end: at(20, 13) },
+      { id: "3", itemId: "c", start: at(20, 9), end: at(20, 10) },
+    ];
+    const days = buildCalendar(sessions, at(24, 0), (id) => info(id, id === "c" ? "other" : "proj"));
+    expect(days.get("2026-10-20")?.totalMs).toBe(4 * HOUR);
+    expect(groupTotals(days.values()).map((g) => [g.key, g.ms / HOUR])).toEqual([
+      ["proj", 4],
+      ["other", 1],
+    ]);
   });
 });

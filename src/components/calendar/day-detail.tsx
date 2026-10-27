@@ -1,7 +1,7 @@
 "use client";
 
 import { format, parseISO } from "date-fns";
-import { ClockIcon } from "lucide-react";
+import { ClockIcon, LayersIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
 
@@ -45,6 +45,13 @@ export function DayDetail({ date, summary, emptyLabel, onItemClick, children }: 
             </span>
           ) : null}
         </header>
+
+        {summary && summary.overlapMs > 60_000 ? (
+          <p className="-mt-1 flex items-center gap-1.5 rounded-[var(--radius)] bg-muted/60 px-2 py-1.5 text-[11px] text-muted-foreground">
+            <LayersIcon className="size-3.5 shrink-0" />
+            {summary.items.length} items overlapped for {formatDuration(summary.overlapMs)} — the day total counts that time once.
+          </p>
+        ) : null}
 
         {summary && summary.items.length > 0 ? (
           <ul className="flex flex-col gap-2">

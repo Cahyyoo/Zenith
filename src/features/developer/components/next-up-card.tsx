@@ -7,6 +7,7 @@ import { ColorDot } from "@/components/common/color-picker";
 import { ElapsedBadge } from "@/features/time/components/elapsed-badge";
 import { Button } from "@/components/ui/button";
 import { EASE_OUT } from "@/lib/motion";
+import type { WorkSchedule } from "@/lib/work-schedule";
 
 import type { FocusItem } from "../lib/focus";
 import { ReasonChips } from "./focus-row";
@@ -17,10 +18,11 @@ type NextUpCardProps = {
   onOpen: () => void;
   onStart: () => void;
   onDone: () => void;
+  schedule?: WorkSchedule;
 };
 
 /** The single most important issue right now, given extra emphasis. */
-export function NextUpCard({ item, onOpen, onStart, onDone }: NextUpCardProps) {
+export function NextUpCard({ item, onOpen, onStart, onDone, schedule }: NextUpCardProps) {
   const { issue, project, reasons } = item;
   const started = issue.status === "in_progress";
 
@@ -52,7 +54,7 @@ export function NextUpCard({ item, onOpen, onStart, onDone }: NextUpCardProps) {
           {issue.title}
         </h2>
         <span className="mt-2 flex flex-wrap items-center gap-1">
-          {started ? <ElapsedBadge since={issue.status_changed_at ?? null} label="In progress" /> : null}
+          {started ? <ElapsedBadge since={issue.status_changed_at ?? null} schedule={schedule} label="In progress" /> : null}
           <ReasonChips reasons={reasons} />
         </span>
         <div className="mt-4 flex flex-wrap gap-2">

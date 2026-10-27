@@ -21,6 +21,8 @@ import { cn } from "@/lib/utils";
 
 import { FocusRow } from "../components/focus-row";
 import { NextUpCard } from "../components/next-up-card";
+import { useWorkSchedule } from "@/features/settings/hooks";
+
 import { useAllIssues, useIssueActions, useProjects } from "../hooks";
 import { nextUp, projectDeadline, rankFocus, type FocusItem } from "../lib/focus";
 import { positionAtEnd } from "../lib/position";
@@ -33,6 +35,7 @@ export function FocusContainer() {
   const projectsQuery = useProjects();
   const { issues, isPending } = useAllIssues(projectsQuery.data);
   const { updateIssue } = useIssueActions();
+  const schedule = useWorkSchedule();
   const [today] = useState(todayIso);
   const [projectFilter, setProjectFilter] = useState<string | null>(null);
   const [showAllUpNext, setShowAllUpNext] = useState(false);
@@ -89,6 +92,7 @@ export function FocusContainer() {
       onOpen={() => open(item)}
       onStart={() => start(item)}
       onDone={() => done(item)}
+      schedule={schedule}
     />
   );
 
@@ -161,7 +165,7 @@ export function FocusContainer() {
         />
       ) : (
         <div className="flex flex-col gap-6">
-          <NextUpCard item={top} onOpen={() => open(top)} onStart={() => start(top)} onDone={() => done(top)} />
+          <NextUpCard item={top} onOpen={() => open(top)} onStart={() => start(top)} onDone={() => done(top)} schedule={schedule} />
 
           {inProgress.length > 0 ? (
             <Section title="In progress" count={inProgress.length} hint="Finish what you started">

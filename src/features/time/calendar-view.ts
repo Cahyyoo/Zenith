@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 
 import type { CalendarDay } from "@/components/calendar/month-calendar";
 import { todayIso } from "@/lib/dates";
+import type { WorkSchedule } from "@/lib/work-schedule";
 
 import { toSession, type EntryRow } from "./api";
 import {
@@ -55,6 +56,8 @@ export function buildTimeView(input: {
   describe: (itemId: string) => ItemInfo | undefined;
   now: number;
   month: Date;
+  /** Count only time inside these working hours (Developer). */
+  schedule?: WorkSchedule;
 }): TimeView {
   const stopped = new Map(
     input.local.filter((item) => !item.active).map((item) => [item.itemId, item.statusChangedAt] as const),
@@ -63,7 +66,7 @@ export function buildTimeView(input: {
     closeLocallyStopped(input.rows.map(toSession), stopped),
     input.local.filter((item) => item.active).map((item) => ({ itemId: item.itemId, since: item.statusChangedAt })),
   );
-  const days = buildCalendar(sessions, input.now, input.describe);
+  const days = buildCalendar(sessions, input.now, input.describe, { schedule: input.schedule });
 
   const cells = new Map<string, CalendarDay>();
   for (const [date, day] of days) {

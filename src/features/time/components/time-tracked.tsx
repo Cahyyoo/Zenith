@@ -3,18 +3,22 @@
 import { format } from "date-fns";
 import { ClockIcon } from "lucide-react";
 
-import { formatDuration, type Session } from "../lib/time";
+import type { WorkSchedule } from "@/lib/work-schedule";
+
+import { formatDuration, sessionDuration, type Session } from "../lib/time";
 
 type TimeTrackedProps = {
   sessions: Session[];
   now: number;
   /** How many of the latest sessions to list. */
   limit?: number;
+  /** Count only time inside working hours (matches the Report). */
+  schedule?: WorkSchedule;
 };
 
 /** "Time tracked: 3h 20m · 4 sessions" with the most recent sessions. */
-export function TimeTracked({ sessions, now, limit = 5 }: TimeTrackedProps) {
-  const totalMs = sessions.reduce((sum, session) => sum + Math.max(0, (session.end ?? now) - session.start), 0);
+export function TimeTracked({ sessions, now, limit = 5, schedule }: TimeTrackedProps) {
+  const totalMs = sessions.reduce((sum, session) => sum + sessionDuration(session, now, schedule), 0);
   const recent = [...sessions].sort((a, b) => b.start - a.start).slice(0, limit);
 
   return (
@@ -23,6 +27,7 @@ export function TimeTracked({ sessions, now, limit = 5 }: TimeTrackedProps) {
         <ClockIcon className="size-3.5 text-muted-foreground" />
         Time tracked
         <span className="ml-auto font-semibold tabular-nums">{formatDuration(totalMs)}</span>
+        {schedule ? <span className="font-normal text-muted-foreground">in working hours</span> : null}
         <span className="font-normal text-muted-foreground">
           · {sessions.length} {sessions.length === 1 ? "session" : "sessions"}
         </span>
@@ -37,7 +42,7 @@ export function TimeTracked({ sessions, now, limit = 5 }: TimeTrackedProps) {
                 {format(session.start, "EEE d MMM, HH:mm")}–{session.end === null ? "now" : format(session.end, "HH:mm")}
               </span>
               <span className={session.end === null ? "font-semibold text-primary" : "text-foreground"}>
-                {formatDuration(Math.max(0, (session.end ?? now) - session.start))}
+                {formatDuration(sessionDuration(session, now, schedule))}
               </span>
             </li>
           ))}

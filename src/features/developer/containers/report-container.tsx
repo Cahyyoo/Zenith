@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -13,7 +14,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { buildTimeView, monthLabel, useMonthState } from "@/features/time/calendar-view";
 import { useEntries, useNow } from "@/features/time/hooks";
 import { formatDuration, type ItemInfo } from "@/features/time/lib/time";
+import { useWorkSchedule } from "@/features/settings/hooks";
 import { routes } from "@/lib/routes";
+import { describeSchedule } from "@/lib/work-schedule";
 
 import { issueDisplayId } from "../components/issue-meta";
 import { useAllIssues, useProjects } from "../hooks";
@@ -25,6 +28,7 @@ export function ReportContainer() {
   const { issues } = useAllIssues(projectsQuery.data);
   const entries = useEntries("issue", range);
   const now = useNow();
+  const schedule = useWorkSchedule();
   const [projectFilter, setProjectFilter] = useState<string | null>(null);
 
   const projects = useMemo(() => projectsQuery.data ?? [], [projectsQuery.data]);
@@ -63,8 +67,9 @@ export function ReportContainer() {
       describe,
       now,
       month,
+      schedule,
     });
-  }, [entries.data, issues, issueInfo, projectById, projectFilter, now, month]);
+  }, [entries.data, issues, issueInfo, projectById, projectFilter, now, month, schedule]);
 
   const trackedProjects = projects.filter((project) =>
     [...issueInfo.values()].some((issue) => issue.projectId === project.id),
@@ -91,7 +96,19 @@ export function ReportContainer() {
 
   return (
     <div className="mx-auto w-full max-w-5xl">
-      <PageHeader title="Report" description="Which issues you worked on, day by day. Time runs while an issue is In Progress." />
+      <PageHeader
+        title="Report"
+        description={
+          <>
+            Which issues you worked on, day by day. Time counts while an issue is In Progress, within working hours (
+            {describeSchedule(schedule)} ·{" "}
+            <Link href={routes.settings} className="underline underline-offset-2 hover:text-foreground">
+              change
+            </Link>
+            ). Parallel work counts once in totals.
+          </>
+        }
+      />
 
       {trackedProjects.length > 1 ? (
         <div className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0" aria-label="Filter by project">

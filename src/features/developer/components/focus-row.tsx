@@ -7,6 +7,7 @@ import { ColorDot } from "@/components/common/color-picker";
 import { ElapsedBadge } from "@/features/time/components/elapsed-badge";
 import { Button } from "@/components/ui/button";
 import { listItemVariants } from "@/lib/motion";
+import type { WorkSchedule } from "@/lib/work-schedule";
 import { cn } from "@/lib/utils";
 
 import type { FocusItem } from "../lib/focus";
@@ -42,9 +43,10 @@ type FocusRowProps = {
   onOpen: () => void;
   onStart: () => void;
   onDone: () => void;
+  schedule?: WorkSchedule;
 };
 
-export function FocusRow({ item, rank, onOpen, onStart, onDone }: FocusRowProps) {
+export function FocusRow({ item, rank, onOpen, onStart, onDone, schedule }: FocusRowProps) {
   const { issue, project, reasons } = item;
   const started = issue.status === "in_progress";
 
@@ -73,7 +75,7 @@ export function FocusRow({ item, rank, onOpen, onStart, onDone }: FocusRowProps)
           </span>
           {started || reasons.length > 0 ? (
             <span className="flex flex-wrap items-center gap-1">
-              {started ? <ElapsedBadge since={issue.status_changed_at ?? null} /> : null}
+              {started ? <ElapsedBadge since={issue.status_changed_at ?? null} schedule={schedule} /> : null}
               <ReasonChips reasons={reasons} />
             </span>
           ) : null}
