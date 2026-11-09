@@ -1,6 +1,16 @@
 "use client";
 
-import { CalendarIcon, EllipsisIcon, PauseIcon, PencilIcon, PlayIcon, Trash2Icon } from "lucide-react";
+import {
+  BellIcon,
+  CalendarIcon,
+  EllipsisIcon,
+  PauseIcon,
+  PencilIcon,
+  PlayIcon,
+  RepeatIcon,
+  SkipForwardIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { motion, useAnimate, useMotionValue, useTransform, type PanInfo } from "motion/react";
 import { useRef } from "react";
 
@@ -17,6 +27,7 @@ import { formatDueDate } from "@/lib/dates";
 import { listItemVariants } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
+import { shortRecurrence } from "../lib/recurrence";
 import { dueState } from "../lib/sort";
 import type { Tag, Task } from "../types";
 import { TagBadge } from "./tag-badge";
@@ -34,6 +45,8 @@ type TaskItemProps = {
   /** Start / pause "Sedang dikerjakan" (time tracking). */
   onStart: () => void;
   onPause: () => void;
+  /** Repeating tasks: move to the next occurrence without completing. */
+  onSkip: () => void;
 };
 
 const DUE_CLASSES = {
@@ -43,7 +56,7 @@ const DUE_CLASSES = {
   later: "text-muted-foreground",
 } as const;
 
-export function TaskItem({ task, tags, today, onToggle, onOpen, onDelete, onStart, onPause }: TaskItemProps) {
+export function TaskItem({ task, tags, today, onToggle, onOpen, onDelete, onStart, onPause, onSkip }: TaskItemProps) {
   const doing = Boolean(task.doing) && !task.completed;
   const [scope, animate] = useAnimate<HTMLDivElement>();
   const dragged = useRef(false);
@@ -131,13 +144,21 @@ export function TaskItem({ task, tags, today, onToggle, onOpen, onDelete, onStar
           >
             {task.title}
           </span>
-          {doing || due || tags.length > 0 ? (
+          {doing || due || task.recurrence || tags.length > 0 ? (
             <span className="flex flex-wrap items-center gap-1.5">
               {doing ? <ElapsedBadge since={task.status_changed_at} label="Sedang dikerjakan" /> : null}
               {due && task.due_date ? (
                 <span className={cn("inline-flex items-center gap-1 text-xs", DUE_CLASSES[due])}>
                   <CalendarIcon className="size-3" />
                   {formatDueDate(task.due_date, today)}
+                  {task.due_time ? ` ${task.due_time}` : null}
+                  {task.remind_at ? <BellIcon className="size-3" aria-label="Reminder on" /> : null}
+                </span>
+              ) : null}
+              {task.recurrence && !task.completed ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  <RepeatIcon className="size-3" aria-hidden />
+                  {shortRecurrence(task.recurrence)}
                 </span>
               ) : null}
               {tags.map((tag) => (
@@ -171,6 +192,12 @@ export function TaskItem({ task, tags, today, onToggle, onOpen, onDelete, onStar
               <PencilIcon />
               Edit
             </DropdownMenuItem>
+            {task.recurrence && !task.completed ? (
+              <DropdownMenuItem onSelect={onSkip}>
+                <SkipForwardIcon />
+                Skip this time
+              </DropdownMenuItem>
+            ) : null}
             <DropdownMenuItem variant="destructive" onSelect={onDelete}>
               <Trash2Icon />
               Delete

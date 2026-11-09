@@ -20,6 +20,12 @@ export function compareTasks(a: Task, b: Task): number {
     return a.due_date.localeCompare(b.due_date);
   }
 
+  if (a.due_time !== b.due_time) {
+    if (!a.due_time) return 1;
+    if (!b.due_time) return -1;
+    return a.due_time.localeCompare(b.due_time);
+  }
+
   return a.created_at.localeCompare(b.created_at);
 }
 

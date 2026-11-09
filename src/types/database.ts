@@ -111,6 +111,11 @@ export type Database = {
           created_at: string;
           doing: boolean;
           due_date: string | null;
+          due_time: string | null;
+          recurrence: Json | null;
+          remind_offset_minutes: number | null;
+          remind_at: string | null;
+          reminded_at: string | null;
           id: string;
           notes: string;
           status_changed_at: string | null;
@@ -124,6 +129,11 @@ export type Database = {
           created_at?: string;
           doing?: boolean;
           due_date?: string | null;
+          due_time?: string | null;
+          recurrence?: Json | null;
+          remind_offset_minutes?: number | null;
+          remind_at?: string | null;
+          reminded_at?: string | null;
           id?: string;
           notes?: string;
           status_changed_at?: string | null;
@@ -137,6 +147,11 @@ export type Database = {
           created_at?: string;
           doing?: boolean;
           due_date?: string | null;
+          due_time?: string | null;
+          recurrence?: Json | null;
+          remind_offset_minutes?: number | null;
+          remind_at?: string | null;
+          reminded_at?: string | null;
           id?: string;
           notes?: string;
           status_changed_at?: string | null;
@@ -275,6 +290,36 @@ export type Database = {
           updated_at?: string;
           user_id?: string;
           work_schedule?: Json;
+        };
+        Relationships: [];
+      };
+      push_subscriptions: {
+        Row: {
+          auth: string;
+          created_at: string;
+          endpoint: string;
+          id: string;
+          p256dh: string;
+          user_agent: string;
+          user_id: string;
+        };
+        Insert: {
+          auth: string;
+          created_at?: string;
+          endpoint: string;
+          id?: string;
+          p256dh: string;
+          user_agent?: string;
+          user_id?: string;
+        };
+        Update: {
+          auth?: string;
+          created_at?: string;
+          endpoint?: string;
+          id?: string;
+          p256dh?: string;
+          user_agent?: string;
+          user_id?: string;
         };
         Relationships: [];
       };

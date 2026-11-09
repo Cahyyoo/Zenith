@@ -4,6 +4,7 @@ import { isAuthRetryableFetchError, type User } from "@supabase/supabase-js";
 import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
+import { unsubscribeThisDevice } from "@/features/notifications/push";
 import { queryPersister } from "@/lib/query/persister";
 import { getSupabase } from "@/lib/supabase/client";
 
@@ -104,6 +105,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [queryClient]);
 
   const signOut = useCallback(async () => {
+    // Stop reminders for the account on this device (best effort, needs auth).
+    await unsubscribeThisDevice().catch(() => undefined);
     await getSupabase().auth.signOut({ scope: "local" });
     await clearLocalData(queryClient);
     setState({ status: "unauthenticated", user: null });

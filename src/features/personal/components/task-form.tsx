@@ -1,20 +1,31 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { ReactNode } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useState, type ReactNode } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 
 import { DatePicker } from "@/components/common/date-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { todayIso } from "@/lib/dates";
 
 import { taskFormSchema, type TaskFormValues } from "../schemas";
 import type { Tag } from "../types";
+import { ReminderPicker, TimeField } from "./reminder-fields";
+import { RepeatPicker } from "./repeat-picker";
 import { TagPicker } from "./tag-picker";
 
-const EMPTY_TASK: TaskFormValues = { title: "", notes: "", due_date: null, tag_ids: [] };
+export const EMPTY_TASK: TaskFormValues = {
+  title: "",
+  notes: "",
+  due_date: null,
+  due_time: null,
+  recurrence: null,
+  remind_offset_minutes: null,
+  tag_ids: [],
+};
 
 type TaskFormProps = {
   tags: Tag[];
@@ -30,6 +41,9 @@ export function TaskForm({ tags, defaultValues = EMPTY_TASK, submitLabel, onSubm
     defaultValues,
   });
   const { errors } = form.formState;
+  const [today] = useState(todayIso);
+  const dueDate = useWatch({ control: form.control, name: "due_date" });
+  const dueTime = useWatch({ control: form.control, name: "due_time" });
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
@@ -53,12 +67,69 @@ export function TaskForm({ tags, defaultValues = EMPTY_TASK, submitLabel, onSubm
       </div>
 
       <div className="grid gap-1.5">
-        <Label htmlFor="task-due">Due date</Label>
-        <Controller
-          control={form.control}
-          name="due_date"
-          render={({ field }) => <DatePicker id="task-due" value={field.value} onChange={field.onChange} emptyLabel="No due date" />}
-        />
+        <Label htmlFor="task-due">Due</Label>
+        <div className="flex flex-wrap items-center gap-2">
+          <Controller
+            control={form.control}
+            name="due_date"
+            render={({ field }) => (
+              <DatePicker id="task-due" value={field.value} onChange={field.onChange} emptyLabel="No due date" />
+            )}
+          />
+          <Controller
+            control={form.control}
+            name="due_time"
+            render={({ field }) => (
+              <TimeField
+                id="task-time"
+                value={field.value}
+                disabled={!dueDate}
+                onChange={(time) => {
+                  field.onChange(time);
+                  // A newly timed task reminds at that time by default.
+                  if (time && !field.value && form.getValues("remind_offset_minutes") === null) {
+                    form.setValue("remind_offset_minutes", 0);
+                  }
+                }}
+              />
+            )}
+          />
+        </div>
+        {errors.due_date ? <p className="text-xs text-destructive">{errors.due_date.message}</p> : null}
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid content-start gap-1.5">
+          <Label htmlFor="task-repeat">Repeat</Label>
+          <Controller
+            control={form.control}
+            name="recurrence"
+            render={({ field }) => (
+              <RepeatPicker
+                id="task-repeat"
+                value={field.value}
+                dueDate={dueDate}
+                today={today}
+                onChange={(rule) => {
+                  field.onChange(rule);
+                  // Repeating needs a starting date; default to today.
+                  if (rule && !form.getValues("due_date")) form.setValue("due_date", today, { shouldValidate: true });
+                }}
+              />
+            )}
+          />
+        </div>
+        <div className="grid content-start gap-1.5">
+          <Label htmlFor="task-reminder">Reminder</Label>
+          <Controller
+            control={form.control}
+            name="remind_offset_minutes"
+            render={({ field }) => (
+              <ReminderPicker id="task-reminder" value={field.value} onChange={field.onChange} disabled={!dueTime} />
+            )}
+          />
+          {!dueTime ? <p className="text-xs text-muted-foreground">Set a time to get a notification.</p> : null}
+        </div>
       </div>
 
       <div className="grid gap-1.5">

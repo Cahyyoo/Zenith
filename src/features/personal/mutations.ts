@@ -56,6 +56,7 @@ export const createTaskMutation = defineMutation<CreateTaskVars, TaskSnapshot>(
           completed_at: null,
           doing: false,
           status_changed_at: null,
+          reminded_at: null,
           updated_at: now,
         },
       ]);
@@ -78,6 +79,10 @@ export const restoreTaskMutation = defineMutation<Task, TaskSnapshot>(
         title: task.title,
         notes: task.notes,
         due_date: task.due_date,
+        due_time: task.due_time,
+        recurrence: task.recurrence,
+        remind_offset_minutes: task.remind_offset_minutes,
+        remind_at: task.remind_at,
         tag_ids: task.tag_ids,
         created_at: task.created_at,
       });

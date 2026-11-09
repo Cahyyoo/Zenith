@@ -30,6 +30,42 @@ Sign-in is email + password only.
 
 The default Supabase email templates work as is. If you customize them, keep `{{ .ConfirmationURL }}` as the link.
 
+## Reminders (push notifications)
+
+Personal tasks can have a due time and a reminder (at the time, or 5 / 15 / 30 / 60 minutes before). The device computes `remind_at` in its own timezone. Every minute the `send-reminders` Edge Function sends due reminders as Web Push, so they arrive even when Zenith is closed.
+
+One-time setup:
+
+1. **Generate VAPID keys:**
+   ```bash
+   npx web-push generate-vapid-keys
+   ```
+2. **Deploy the function and set its secrets.** `CRON_SECRET` is any long random string.
+   ```bash
+   pnpm supabase login
+   pnpm supabase link --project-ref <project-ref>
+   pnpm supabase functions deploy send-reminders --no-verify-jwt
+   pnpm supabase secrets set VAPID_PUBLIC_KEY=<public> VAPID_PRIVATE_KEY=<private> VAPID_SUBJECT=mailto:you@example.com CRON_SECRET=<random>
+   ```
+3. **Schedule it.** Open [`supabase/setup/reminders-cron.sql`](supabase/setup/reminders-cron.sql), replace `<CRON_SECRET>`, and run it in the SQL Editor.
+4. **Give the app the public key.** Set `NEXT_PUBLIC_VAPID_PUBLIC_KEY=<public>` in `.env` and in Vercel, then rebuild.
+5. **Turn it on per device.** In the app, go to Settings → Notifications → **Enable on this device**.
+
+Notes:
+
+- Push works only in a production build over HTTPS (the service worker is off in `pnpm dev`).
+- On iPhone/iPad it works only after Add to Home Screen (iOS 16.4+).
+- Reminders more than 12 hours late (e.g. after an outage) are skipped.
+- Signing out removes this device's subscription.
+
+## Repeating tasks
+
+A task can repeat every N days, every N weeks on chosen weekdays, every N months or every year.
+
+- **Next date:** completing an occurrence creates the next one on the fixed schedule, counted from the due date. Dates already in the past are skipped.
+- **Where the rule lives:** it moves to the new occurrence, so reopening an old one never duplicates it.
+- **Skip this time:** moves a task to its next date without completing it.
+
 ## Scripts
 
 | Command | |

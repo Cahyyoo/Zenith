@@ -7,10 +7,28 @@ import type {
   UpdateTagVars,
   UpdateTaskVars,
 } from "./schemas";
+import { parseRecurrence } from "./lib/recurrence";
 import type { Tag, Task } from "./types";
 
 // Pure async functions over Supabase. Every write is idempotent so a
 // replayed offline mutation that already reached the server is harmless.
+
+/**
+ * Fills fields added by later migrations (for rows cached on the device
+ * before them) and trims Postgres "HH:mm:ss" times to "HH:mm".
+ */
+export function normalizeTasks(tasks: Task[]): Task[] {
+  return tasks.map((task) => ({
+    ...task,
+    doing: task.doing ?? false,
+    status_changed_at: task.status_changed_at ?? null,
+    due_time: task.due_time ? task.due_time.slice(0, 5) : null,
+    recurrence: parseRecurrence(task.recurrence),
+    remind_offset_minutes: task.remind_offset_minutes ?? null,
+    remind_at: task.remind_at ?? null,
+    reminded_at: task.reminded_at ?? null,
+  }));
+}
 
 export async function fetchTasks(): Promise<Task[]> {
   const rows = unwrap(
@@ -19,10 +37,13 @@ export async function fetchTasks(): Promise<Task[]> {
       .select("*, personal_task_tags(tag_id)")
       .order("created_at", { ascending: true }),
   );
-  return rows.map(({ personal_task_tags, ...task }) => ({
-    ...task,
-    tag_ids: personal_task_tags.map((link) => link.tag_id),
-  }));
+  return normalizeTasks(
+    rows.map(({ personal_task_tags, ...task }) => ({
+      ...task,
+      recurrence: parseRecurrence(task.recurrence),
+      tag_ids: personal_task_tags.map((link) => link.tag_id),
+    })),
+  );
 }
 
 async function setTaskTags(taskId: string, tagIds: string[]): Promise<void> {

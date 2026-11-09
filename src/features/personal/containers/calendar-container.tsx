@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClockIcon, CircleCheckIcon, CircleIcon } from "lucide-react";
+import { CalendarClockIcon, CircleCheckIcon, CircleIcon, RepeatIcon } from "lucide-react";
 import { useMemo } from "react";
 
 import { DayDetail } from "@/components/calendar/day-detail";
@@ -15,6 +15,8 @@ import type { ItemInfo } from "@/features/time/lib/time";
 import { cn } from "@/lib/utils";
 
 import { useTagMap, useTasks } from "../hooks";
+import { occurrencesBetween, shortRecurrence } from "../lib/recurrence";
+import type { Task } from "../types";
 
 const UNTAGGED = "untagged";
 
@@ -53,25 +55,41 @@ export function CalendarContainer() {
     });
   }, [entries.data, tasks, tagMap, now, month]);
 
-  // Due markers: tasks due on each date (red when overdue and still open).
-  const cells = useMemo(() => {
-    const merged = new Map<string, CalendarDay>(view.cells);
-    const due = new Map<string, { count: number; overdue: boolean }>();
+  // What's due on each visible date: real due dates plus the upcoming
+  // occurrences of open repeating tasks (shown as dashed markers).
+  const dueByDate = useMemo(() => {
+    const from = weeks[0]?.[0] ?? today;
+    const to = weeks.at(-1)?.at(-1) ?? today;
+    const byDate = new Map<string, { task: Task; upcoming: boolean }[]>();
+    const add = (date: string, task: Task, upcoming: boolean) =>
+      byDate.set(date, [...(byDate.get(date) ?? []), { task, upcoming }]);
     for (const task of tasks) {
       if (!task.due_date) continue;
-      const entry = due.get(task.due_date) ?? { count: 0, overdue: false };
-      entry.count += 1;
-      entry.overdue ||= !task.completed && task.due_date < today;
-      due.set(task.due_date, entry);
+      add(task.due_date, task, false);
+      if (task.recurrence && !task.completed) {
+        for (const date of occurrencesBetween(task.recurrence, task.due_date, from, to)) add(date, task, true);
+      }
     }
-    for (const [date, { count, overdue }] of due) {
+    return byDate;
+  }, [tasks, weeks, today]);
+
+  const cells = useMemo(() => {
+    const merged = new Map<string, CalendarDay>(view.cells);
+    for (const [date, entries] of dueByDate) {
+      const overdue = entries.some(({ task, upcoming }) => !upcoming && !task.completed && date < today);
+      const allUpcoming = entries.every((entry) => entry.upcoming);
       const cell = merged.get(date) ?? { dots: [] };
-      merged.set(date, { ...cell, marker: { count, tone: overdue ? "overdue" : "due" } });
+      merged.set(date, {
+        ...cell,
+        marker: { count: entries.length, tone: overdue ? "overdue" : allUpcoming ? "upcoming" : "due" },
+      });
     }
     return merged;
-  }, [view.cells, tasks, today]);
+  }, [view.cells, dueByDate, today]);
 
-  const dueOnSelected = tasks.filter((task) => task.due_date === selected);
+  const dueOnSelected = [...(dueByDate.get(selected) ?? [])].sort((a, b) =>
+    (a.task.due_time ?? "99:99").localeCompare(b.task.due_time ?? "99:99"),
+  );
 
   return (
     <div className="mx-auto w-full max-w-5xl">
@@ -106,19 +124,32 @@ export function CalendarContainer() {
                     Due
                   </h3>
                   <ul className="flex flex-col gap-1">
-                    {dueOnSelected.map((task) => {
+                    {dueOnSelected.map(({ task, upcoming }) => {
                       const tag = task.tag_ids.map((id) => tagMap.get(id)).find((candidate) => candidate !== undefined);
-                      const overdue = !task.completed && selected < today;
+                      const overdue = !upcoming && !task.completed && selected < today;
                       return (
-                        <li key={task.id} className="flex items-center gap-2 text-sm">
-                          {task.completed ? (
+                        <li key={`${task.id}-${upcoming}`} className="flex items-center gap-2 text-sm">
+                          {upcoming ? (
+                            <RepeatIcon className="size-4 text-highlight" aria-label="Repeats" />
+                          ) : task.completed ? (
                             <CircleCheckIcon className="size-4 text-primary" aria-label="Done" />
                           ) : (
                             <CircleIcon className={cn("size-4", overdue ? "text-destructive" : "text-muted-foreground")} aria-label="Open" />
                           )}
-                          <span className={cn("min-w-0 flex-1 truncate", task.completed && "text-muted-foreground line-through")}>
+                          <span
+                            className={cn(
+                              "min-w-0 flex-1 truncate",
+                              !upcoming && task.completed && "text-muted-foreground line-through",
+                            )}
+                          >
                             {task.title}
                           </span>
+                          {task.due_time ? (
+                            <span className="text-xs text-muted-foreground tabular-nums">{task.due_time}</span>
+                          ) : null}
+                          {task.recurrence ? (
+                            <span className="text-[10px] text-muted-foreground">{shortRecurrence(task.recurrence)}</span>
+                          ) : null}
                           {tag ? <ColorDot color={tag.color} /> : null}
                         </li>
                       );

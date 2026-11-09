@@ -2,6 +2,7 @@
 
 import { ListTodoIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
+import { format, parseISO } from "date-fns";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -16,7 +17,7 @@ import { COLOR_CLASSES } from "@/lib/domain";
 import { cn } from "@/lib/utils";
 
 import { InlineTaskInput } from "../components/inline-task-input";
-import { TaskForm } from "../components/task-form";
+import { EMPTY_TASK, TaskForm } from "../components/task-form";
 import { TaskList, type TaskRow } from "../components/task-list";
 import { useTagMap, useTags, useTaskActions, useTasks } from "../hooks";
 import { sortTasks } from "../lib/sort";
@@ -62,6 +63,21 @@ export function TaskListContainer() {
     });
   };
 
+  const handleToggle = (task: Task, completed: boolean) => {
+    const result = actions.setCompleted(task, completed);
+    if (result) {
+      toast("Done — see you next time", {
+        description: `${task.title} · next ${format(parseISO(result.nextDue), "EEE d MMM")}`,
+        action: { label: "Undo", onClick: result.undo },
+      });
+    }
+  };
+
+  const handleSkip = (task: Task) => {
+    const nextDue = actions.skipTask(task);
+    if (nextDue) toast("Skipped", { description: `${task.title} · next ${format(parseISO(nextDue), "EEE d MMM")}` });
+  };
+
   return (
     <div className="mx-auto w-full max-w-2xl">
       <PageHeader
@@ -90,7 +106,7 @@ export function TaskListContainer() {
         <InlineTaskInput
           placeholder="Add a task and press Enter"
           onCreate={(title) =>
-            actions.createTask({ title, notes: "", due_date: null, tag_ids: tagFilter ? [tagFilter] : [] })
+            actions.createTask({ ...EMPTY_TASK, title, tag_ids: tagFilter ? [tagFilter] : [] })
           }
         />
       </div>
@@ -112,7 +128,8 @@ export function TaskListContainer() {
           open={open}
           completed={completed}
           today={today}
-          onToggle={(task, value) => actions.setCompleted(task.id, value)}
+          onToggle={handleToggle}
+          onSkip={handleSkip}
           onOpen={(task) => setEditingId(task.id)}
           onDelete={handleDelete}
           onStart={(task) => actions.startTask(task.id)}
@@ -136,6 +153,9 @@ export function TaskListContainer() {
               title: editingTask.title,
               notes: editingTask.notes,
               due_date: editingTask.due_date,
+              due_time: editingTask.due_time,
+              recurrence: editingTask.recurrence,
+              remind_offset_minutes: editingTask.remind_offset_minutes,
               tag_ids: editingTask.tag_ids,
             }}
             onSubmit={(values) => {

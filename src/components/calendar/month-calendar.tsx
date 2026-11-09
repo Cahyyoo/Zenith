@@ -15,7 +15,8 @@ export type CalendarDay = {
   /** Dots for what was worked on, most time first. */
   dots: { key: string; color: TagColor }[];
   /** Optional marker, e.g. tasks due that day. */
-  marker?: { count: number; tone: "due" | "overdue" };
+  /** "upcoming" marks future occurrences of repeating tasks. */
+  marker?: { count: number; tone: "due" | "overdue" | "upcoming" };
 };
 
 type MonthCalendarProps = {
@@ -126,7 +127,11 @@ export function MonthCalendar({ month, weeks, days, today, selected, onSelect, o
                     <span
                       className={cn(
                         "rounded-full px-1 text-[9px] leading-4 font-semibold tabular-nums",
-                        day.marker.tone === "overdue" ? "bg-destructive/15 text-destructive" : "bg-highlight/15 text-highlight",
+                        day.marker.tone === "overdue"
+                          ? "bg-destructive/15 text-destructive"
+                          : day.marker.tone === "upcoming"
+                            ? "border border-dashed border-highlight/50 text-highlight"
+                            : "bg-highlight/15 text-highlight",
                       )}
                     >
                       {day.marker.count}

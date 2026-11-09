@@ -13,6 +13,11 @@ function task(overrides: Partial<Task> & { id: string }): Task {
     completed_at: null,
     doing: false,
     status_changed_at: null,
+    due_time: null,
+    recurrence: null,
+    remind_offset_minutes: null,
+    remind_at: null,
+    reminded_at: null,
     created_at: "2026-01-01T00:00:00.000Z",
     updated_at: "2026-01-01T00:00:00.000Z",
     tag_ids: [],
@@ -48,6 +53,15 @@ describe("sortTasks", () => {
       task({ id: "done-but-doing", completed: true, doing: true, completed_at: "2026-01-02T00:00:00.000Z" }),
     ]);
     expect(sorted.map((t) => t.id)).toEqual(["doing", "urgent", "done-but-doing"]);
+  });
+
+  it("orders tasks due the same day by time, timed ones first", () => {
+    const sorted = sortTasks([
+      task({ id: "untimed", due_date: "2026-11-09" }),
+      task({ id: "afternoon", due_date: "2026-11-09", due_time: "14:00" }),
+      task({ id: "morning", due_date: "2026-11-09", due_time: "08:30" }),
+    ]);
+    expect(sorted.map((t) => t.id)).toEqual(["morning", "afternoon", "untimed"]);
   });
 
   it("does not mutate its input", () => {
